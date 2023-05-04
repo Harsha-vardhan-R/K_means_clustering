@@ -1,5 +1,5 @@
 #![allow(non_snake_case, unused_imports, unused_variables, non_upper_case_globals, dead_code, unused_mut)]
-use K_means_clustering::centroid_gen::generate_k_centroids;
+use K_means_clustering::mlalgos::k_cluster::generate_k_centroids;
 use rand::prelude::*;
 
 
