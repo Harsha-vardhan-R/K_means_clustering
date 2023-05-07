@@ -35,6 +35,15 @@ pub mod mlalgos {
                 println!("{:?}", self );
             }
 
+            pub fn encoding_names(&mut self) {
+
+            }
+            pub fn print_associates(&self) {
+                for associates in &self.data {
+                    print!("{}," , associates.associated_cluster.unwrap());
+                }
+            }
+            //working , thank god!!!!!
             pub fn update_centroids(&mut self) {
                 let mut centroids_with_count: Vec<(Vec<f32>, usize)> = vec![(vec![0.0; self.number_of_features], 0); self.k];
                 
@@ -50,12 +59,21 @@ pub mod mlalgos {
                 }
                 
                 // Compute the average of the data points in each cluster to get the new centroids
-                self.centroids = centroids_with_count
-                    .iter()
-                    .map(|(centroid, count)| {
-                        centroid.iter().map(|feature| feature / *count as f32).collect()
-                    })
-                    .collect();
+                //be very careful, if a cluster does not contain any point then dividing the sum by zero will give out NaN.
+                //now applying , if a centroid is not associated with any kind of point , we do not change it's value.
+                let mut new_centroids : Vec<Vec<f32>> = vec![];
+
+                for (i , avgs_with_counts) in centroids_with_count.iter().enumerate() {
+                    //Normally this should not happen if every point is perfectly random in all the features, but that is not the case here , so......
+                    match avgs_with_counts {
+                        ( _ , 0) => new_centroids.push(self.centroids[i].clone()),//if the count is zero , we do not modify the centroids.
+                        _ => new_centroids.push(avgs_with_counts.0.iter().map(|each| each / (avgs_with_counts.1 as f32)).collect()), //else we will do the average thing
+                    }
+
+                }
+
+                self.centroids = new_centroids
+                
 
             }
             
@@ -76,6 +94,7 @@ pub mod mlalgos {
                 closest_centroid_index as u32
             }
 
+            
         }
         //creating a struct, which stores all the info about the present k_mean.
         fn new_df(csv_file_path : &str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32) -> k_means_spec {
@@ -122,6 +141,7 @@ pub mod mlalgos {
                     println!("Done!");
                     break;
                 };
+                present_dataFrame.print_associates();                
 
                 //if we have reached the end of the iteration, print the iteration number.
                 println!("{} iteration" , count);
@@ -139,7 +159,6 @@ pub mod mlalgos {
             //present_nearest:
             //we store the cluster point and it's distance , "if" after the next iteration 
             //we found out that this point is nearer to another centroid we update the present nearest.
-            
             //iterating through every point to see for which cluster it belongs to.
             for sample_point in 0..total_df.number_of_samples {
                 let mut present_nearest : (u32 , f32) = (1000 , std::f32::INFINITY);//initialising with obscure values so that this will for sure be updated.
@@ -149,7 +168,7 @@ pub mod mlalgos {
                     let dist_now = distance_between(&total_df.data[sample_point].data, &total_df.centroids[cluster]);
                     
                     if dist_now < present_nearest.1 {
-                        present_nearest = (cluster.try_into().unwrap() , dist_now);
+                        present_nearest = (cluster as u32 , dist_now);
                     }
 
                 }
@@ -161,25 +180,30 @@ pub mod mlalgos {
 
         } 
 
-        use rand::prelude::*;
+        use fastrand::Rng;
+        //This only generates random numbers , but do not worry about different ranges in different features, even if it contains one sample point,
+        //while calculating the average they will , set , keep your fingers crossed for it atleast catches one sample point.maybe will update in next version.
         fn generate_k_centroids(number_of_clusters : usize ,
-                                    number_of_features : usize ,
-                                    lower_limit : f32 , 
-                                    upper_limit : f32) -> Vec<Vec<f32>> 
+                                number_of_features : usize ,
+                                lower_limit : f32 , 
+                                upper_limit : f32) -> Vec<Vec<f32>> 
         {
-            let mut hava = thread_rng();
+            
             //creating an empty array cause now we know the size of the output.
             let mut out_centroids:Vec<Vec<f32>> = Vec::new();
             
             for _centroids in 0..number_of_clusters {
+                
                 //create this point and push into the all centroids list.
                 let mut this_cluster:Vec<f32> = Vec::new();
                 for _centroid_feature in 0..number_of_features {
-                    this_cluster.push(hava.gen_range(lower_limit , upper_limit));
+                    let mut rng = Rng::new();
+                    let random_f32 = rng.f32();
+                    this_cluster.push(lower_limit + (random_f32 * (upper_limit - lower_limit)));
                 }
                 out_centroids.push(this_cluster);
             }
-    
+            dbg!(&out_centroids);
             out_centroids
     
         }
@@ -243,7 +267,7 @@ pub mod n_dimen_algos {
 
     }
 
-    //takes two arrays of length n(n-dimensional points), returns the euclidean distance between them.
+    ///takes two arrays of length n(n-dimensional points), returns the euclidean distance between them.
     pub fn distance_between( point_1 : &Vec<f32> , point_2 : &Vec<f32> ) -> f32 {
         
         assert!(point_1.len() >= 1 && point_2.len() >= 1 , "You should have atleast 1 feature for the sample point");
@@ -259,45 +283,7 @@ pub mod n_dimen_algos {
         sum_of_squares_of_difference.sqrt()
 
     }
-    /*
-    this function will take all the points in a certain cluster and returns the average of the points as a point ,
-    which should be updated as the new centroid for that cluster.
-    */
-    pub fn give_avg_point(samples_in_cluster : Vec<Vec<f32>>) -> Vec<f32> {
-
-        assert!(samples_in_cluster.len() > 0 , "The cluster must contain atleast one sample point");
-
-        let number_of_features = samples_in_cluster[0].len();
-        let number_of_samples = samples_in_cluster.len();
-
-        let mut out_vec:Vec<f32> = vec![];
-
-        //for one feature
-        for this_feature in 0..number_of_features {
-            let mut this_feature_in_pts : Vec<f32> = vec![];
-            for each_feature_in_point in 0..number_of_samples {
-                this_feature_in_pts.push(samples_in_cluster[this_feature][each_feature_in_point]);
-            }
-            out_vec.push(average(this_feature_in_pts));
-        }
-        
-        out_vec
-        
-    } 
-
-    //This is for individual elements this will not be needed for the user to use,
-    //takes in one of the feature of all the elements in a cluster and gives out the  
-    fn average(feature_in_cluster : Vec<f32>) -> f32 {
-
-        let mut sum = 0_f32;
-        let len = feature_in_cluster.len() as f32;
-        for i in feature_in_cluster {
-            sum += i;
-        }
-
-        sum / len
-
-    }
+    
 
 }
 

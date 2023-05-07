@@ -2,7 +2,11 @@
 
 use K_means_clustering::mlalgos::k_cluster::k_means;
 fn main() {
-    //Example code , of how to use this.
-    let _machine = k_means("C:/Users/HARSHA/Downloads/wine-clustering.csv", 12, 0.0, 20.0, 0.01);
-    //machine.predict(x);
+    //Example code.
+    //creating the data frame and respective , specifications.
+    let machine = k_means("C:/Users/HARSHA/Downloads/wine-clustering.csv", 3, 10.0, 15.0, 0.01);
+    //here we provide the names for previously stored just as k - encodings.
+    //machine.encoding_names();
+    //predict.    still accuracy and testing functions are not written.
+    //machine.predict();
 }
