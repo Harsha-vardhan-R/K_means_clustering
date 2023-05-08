@@ -90,15 +90,16 @@ pub mod mlalgos {
                     }
                 }
                 
-                print!("{}", closest_centroid_index);
+                println!("{}", closest_centroid_index);
                 closest_centroid_index as u32
             }
 
             
         }
         //creating a struct, which stores all the info about the present k_mean.
-        fn new_df(csv_file_path : &str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32) -> k_means_spec {
-            let data = csv_to_df(csv_file_path).unwrap();
+        fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32 , which_features: Vec<usize>) -> k_means_spec {
+            let data = csv_to_df(csv_file_path , which_features).unwrap();
+            //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
             let number_of_features = data[0].data.len();
             let number_of_samples = data.len();
             //creating and returning a new k_means_spec struct.
@@ -115,15 +116,16 @@ pub mod mlalgos {
         
         //This is the main logic behind, users should use this.
         //Lower_limit and upper limit will be used in the random generation function.
-        pub fn k_means (csv_file_path : &str,
+        pub fn k_means(csv_file_path : &str,
                         k_value : usize,
                         lower_limit : f32,
                         upper_limit : f32,
-                        Threshold : f32, ) -> k_means_spec
+                        Threshold : f32,
+                        which_features: Vec<usize> ) -> k_means_spec
         {
 
             //mut, because we will change the centroid values, after every iteration.
-            let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, lower_limit, upper_limit);//now we have a data_set and its specifications to work on.
+            let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, lower_limit, upper_limit , which_features);//now we have a data_set and its specifications to work on.
             let mut count = 1;
             //clustering in k means until we get the centroid points moving less than threshold value after one iteration.
             //main loop
@@ -142,9 +144,9 @@ pub mod mlalgos {
                     break;
                 };
                 present_dataFrame.print_associates();                
-
+                print!("\n");
                 //if we have reached the end of the iteration, print the iteration number.
-                println!("{} iteration" , count);
+                println!("{} iteration done" , count);
                 count += 1;
                 
             }
@@ -153,13 +155,10 @@ pub mod mlalgos {
 
         }
 
-        //This function will take the entire list of centroids and also the entire dataset , edits the individual sample points.
+        //This function will take the entire list of centroids and also the entire dataset.
         //i.e sets the associative field to the nearest centroid.
         fn k_cluster(total_df : &mut k_means_spec ) -> () {
-            //present_nearest:
-            //we store the cluster point and it's distance , "if" after the next iteration 
-            //we found out that this point is nearer to another centroid we update the present nearest.
-            //iterating through every point to see for which cluster it belongs to.
+             
             for sample_point in 0..total_df.number_of_samples {
                 let mut present_nearest : (u32 , f32) = (1000 , std::f32::INFINITY);//initialising with obscure values so that this will for sure be updated.
                 //now we have one sample in our hand, time to find out the nearest centroid to this.
@@ -182,7 +181,7 @@ pub mod mlalgos {
 
         use fastrand::Rng;
         //This only generates random numbers , but do not worry about different ranges in different features, even if it contains one sample point,
-        //while calculating the average they will , set , keep your fingers crossed for it atleast catches one sample point.maybe will update in next version.
+        //while calculating the average they will set , keep your fingers crossed for it atleast catches one sample point.maybe will update in next version.
         fn generate_k_centroids(number_of_clusters : usize ,
                                 number_of_features : usize ,
                                 lower_limit : f32 , 
@@ -210,31 +209,52 @@ pub mod mlalgos {
 
         use std::error::Error;
         use std::fs::File;
+        use std::io::prelude::*;
+        use std::io::BufReader;
         use csv::ReaderBuilder;
 
-        //This function opens the csv and creates the data set, from the values in the csv,
-        //output is a result so do not forget to unwrap.//we will not check if it is a csv file or not so be 
-        //a little bit careful , when debugging.
-        fn csv_to_df(file_path : &str) -> Result<Vec<sample_point> , Box<dyn Error>> {
+        pub fn csv_to_df(
+            file_path: &str,
+            which_features: Vec<usize>,
+        ) -> Result<Vec<sample_point>, Box<dyn Error>> {
 
-            let file_system = File::open(file_path)?; 
-            let mut reader = ReaderBuilder::new().has_headers(true).from_reader(file_system);//we take like it always contains headers.
-        
-            //I know this code looks really unreadable but there is nothing more to work on.
-            let full_dataset: Vec<sample_point> = reader.records()//records gives an iterator which gives out one row at a time, from the csv we provided.
-                                                    .map(| record| -> Result<sample_point , Box<dyn Error>>{//first we take a row,
-                                                    let mut this_point = sample_point { data : vec![],
-                                                                                        associated_cluster : None };
-                                                    let r = record?;
-                                                    this_point.data = r.iter().map(|s| s.parse::<f32>()).collect::<Result<Vec<f32>, _ >>()?;//turning each value into an f32,cause the default will be in the form of a string.
-                                                    Ok(this_point)//and turn it into a sample point, with its data as this record.
-                                                    }).collect::<Result<Vec<sample_point>, _ >>()?;//we aollect all these sample points as a dataset.
+            let file_system = File::open(file_path)?;
+            let reader = BufReader::new(file_system);
+            let mut csv_reader = ReaderBuilder::new().has_headers(true).from_reader(reader);
 
-        
+            let full_dataset: Vec<sample_point> = csv_reader
+                .records()
+                .filter_map(|record| {
+                    let mut this_point = sample_point {
+                        data: vec![],
+                        associated_cluster: None,
+                    };
+                    let record = record.ok()?;
+                    if which_features.is_empty() {
+                        // If which_features is empty, consider all the columns
+                        this_point.data = record
+                            .iter()
+                            .map(|s| s.parse::<f32>())
+                            .collect::<Result<Vec<f32>, _>>()
+                            .ok()?;
+                    } else {
+                        // Consider only the columns specified by which_features
+                        this_point.data = which_features
+                            .iter()
+                            .map(|&i| record.get(i))
+                            .collect::<Option<Vec<&str>>>()?
+                            .iter()
+                            .map(|&s| s.parse::<f32>())
+                            .collect::<Result<Vec<f32>, _>>()
+                            .ok()?;
+                    }
+                    Some(this_point)
+                })
+                .collect::<Vec<_>>();
 
-        Ok(full_dataset)
-
+            Ok(full_dataset)
         }
+
 
 
 
