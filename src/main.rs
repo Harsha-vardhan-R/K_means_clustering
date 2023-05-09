@@ -1,6 +1,15 @@
 #![allow(non_snake_case)]
+pub mod K_Means_Clustering {
+    pub mod k_means_clustering;
+}
+pub mod n_dimen;
+
 use std::time;
-use K_means_clustering::mlalgos::k_cluster::k_means;
+
+use crate::K_Means_Clustering::k_means_clustering::k_means;
+
+
+
 fn main() {
     //Example code.
     //creating the data frame and respective , specifications.
