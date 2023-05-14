@@ -8,7 +8,6 @@ version = "0.1.0"
 dependencies = [
  "csv",
  "fastrand",
- "plotter",
 ]
 
 [[package]]
@@ -67,12 +66,6 @@ name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
-
-[[package]]
-name = "plotter"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f02733e028a5da18d6f0ebc3980910a90be7703245c145a5c7527d78a787ac8b"
 
 [[package]]
 name = "ryu"

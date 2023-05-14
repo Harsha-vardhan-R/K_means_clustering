@@ -1,3 +1,4 @@
+#![allow(non_snake_case, non_camel_case_types, unused_mut, unused_imports)]
 
 #[derive(Debug)]
 pub struct sample_point {
@@ -13,28 +14,47 @@ pub struct k_means_spec<'a> {
     k : usize,
     number_of_features : usize,
     number_of_samples : usize,
-    pub threshold : f32,
+    threshold : f32,
     pub visuals : bool,
+    pub encodings : Option<Vec<String>>,
+    varience : Option<Vec<Vec<f32>>>,
+    cluster_populations : Option<Vec<usize>>,
 }
 
 use core::f32;
+use std::dbg;
 
 impl k_means_spec<'_> {
     
-    pub fn print(&self) {
+    fn print(&self) {
         println!("{:?}", self );
     }
 
-    pub fn encoding_names(&mut self) {
+    pub fn print_populations(&self) -> Vec<usize> {
+        self.cluster_populations.clone().unwrap()
+    }
+
+    
+    //I do not even know if this can be done , we already opened the file once right?
+    /* pub fn feature_names(&self) {
+
+    } */
+
+    pub fn encoding_names(&mut self , Names : Vec<String>) {
+        //checking for the correct number of names 
+        assert!(Names.len() == self.k , "The number of names provided do not match the k value");
+
+        self.encodings = Some(Names);
 
     }
+
     pub fn print_associates(&self) {
         for associates in &self.data {
             print!("{}," , associates.associated_cluster.unwrap());
         }
     }
-    //working , thank god!!!!!
-    pub fn update_centroids(&mut self) {
+    //working, thank god!!!!!
+    fn update_centroids(&mut self) {
         let mut centroids_with_count: Vec<(Vec<f32>, usize)> = vec![(vec![0.0; self.number_of_features], 0); self.k];
         
         // Sum the data points in each cluster
@@ -66,8 +86,105 @@ impl k_means_spec<'_> {
         
 
     }
+    //gives out a vector of variences of each feature in each cluster, and also gives out the number of points in each cluster.
+    pub fn get_varience(&mut self) -> Vec<Vec<f32>> {
+        //in a cluster the varience = sum((diff(samplepointfeature - associate centroid feature))^2) / number of the samplepoints in that particular cluster.
+
+        //creating the empty and sized vector collection.
+        let mut for_varience : Vec<(Vec<f32> , usize)> = vec![(vec![0.0 ; self.number_of_features] , 0_usize) ; self.k];
+
+        for sample_point in &self.data {
+        //adding a number to the number of samples in the cluster.
+        let this_cluster = sample_point.associated_cluster.unwrap() as usize;
+        for_varience[this_cluster].1 += 1;
+
+            for (i , feature) in sample_point.data.iter().enumerate() {
+                for_varience[this_cluster].0[i] += (feature - self.centroids[this_cluster][i]).powf(2.0);
+            }
+
+        }
+        let mut out_vec: Vec<Vec<f32>> = Default::default();
+
+        for ( vector , number_of_samples) in for_varience.iter() {
+            if number_of_samples == &0_usize {
+                panic!("Cannot calculate without calculating the k means or one of the clusters is empty");
+            }
+
+            let mut temp_vec_iter = vec![];
+
+            for feature in vector {
+                temp_vec_iter.push(feature / *number_of_samples as f32);
+            }
+            out_vec.push(temp_vec_iter);
+        }
+
+        self.varience = Some(out_vec.clone());
+
+        out_vec
+
+    }
+    //Under construction!
+    pub fn get_normal_varience(&mut self) -> Vec<Vec<f32>> {
+
+        //getting the varience vector.
+        let varience = if self.varience.is_some() {
+            self.varience.clone().unwrap()
+        } else {
+            self.varience = Some(self.get_varience());
+            self.varience.clone().unwrap()
+        };
+
+        let mut mod_vec = vec![vec![ 0.0 ; self.number_of_features] ; self.k];
+
+        //Normalising the variences(scaling them down between 0 and 1)
+        for feature_index in 0..self.number_of_features {
+            let mut temp_vec: Vec<f32> = vec![];
+
+            for i in 0..self.k {   
+                temp_vec.push(varience[i][feature_index]);
+            }
+            temp_vec.sort_by(|a , b| a.partial_cmp(b).unwrap());
+            let min = temp_vec[0];
+            let max = temp_vec[temp_vec.len() - 1];
+            //One feature done.
+            dbg!(max , min);
+            let diff = max - min;
+            for i in 0..self.k {
+                mod_vec[i][feature_index] = (varience[i][feature_index] - min) / diff;
+            }
+
+        }
+
+        mod_vec
+
+    }
+
+    pub fn get_weights(&mut self) -> Vec<Vec<f32>> {
+        //firstly getting the normalised variences.
+        let mut varience_normal = self.get_normal_varience();
+        //getting the weights.
+        for feature in 0..self.number_of_features {
+            let mut sum = 0.0;
+            for k in 0..self.k {
+                sum += varience_normal[k][feature];
+            }
+            for k in 0..self.k {
+                varience_normal[k][feature] /= sum;
+            }
+        }
+        let mut temp2 = vec![vec![0.0 ; self.number_of_features] ; self.k];
+        for (i , cluster) in varience_normal.iter().enumerate() {
+            let sum2: f32 = cluster.iter().sum();
+            for t in 0..self.number_of_features {
+                temp2[i][t] = ((varience_normal[i][t] / sum2) * 10000.0).round() / 100.0;
+            }
+            
+        }
+
+        temp2    
+
+    }
     
-    ///this is for predicting.
     pub fn predict(&self, x: &Vec<f32>) -> u32 {
         let mut present_min_dist_with = f32::INFINITY;
         let mut closest_centroid_index = 0;
@@ -79,40 +196,53 @@ impl k_means_spec<'_> {
                 closest_centroid_index = i;
             }
         }
+
+        let pressent_name = match &self.encodings {
+            Some(value) => value[closest_centroid_index].to_owned(),
+            None => "Encoding names are still not given".to_owned(),
+        };
         
-        println!("{}", closest_centroid_index);
+        println!("{:?} Belongs to : index -> {} -> Name : {}", x , closest_centroid_index , pressent_name);
         closest_centroid_index as u32
     }
 
+    //Really temporary function.
+    /* pub fn plot_clusters(&self) -> Result<() , Box<dyn std::error::Error>> {
+
+        if self.visuals == false {
+            panic!("But you did not want visuals , and now you are asking for it!");
+        }
+
+        let mut x = vec![];
+        let mut y = vec![];
+        let mut z = vec![];
+
+        for sample_point in &self.data {
+            x.push(sample_point.data[0]);
+            y.push(sample_point.data[1]);
+            z.push(sample_point.data[2]);
+        }
+
+        ax.points(&x, &y, &z, &[]);
+
+        // Show the plot in a window
+        fg.show()?;
+    
+        Ok(()) 
+    
+    } */
     
 }
-//creating a struct, which stores all the info about the present k_mean.
-fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32 , which_features: Vec<usize>) -> k_means_spec {
-    let data = csv_to_df(csv_file_path , which_features).unwrap();
-    //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
-    let number_of_features = data[0].data.len();
-    let number_of_samples = data.len();
-    //creating and returning a new k_means_spec struct.
-    k_means_spec { csv_file_path: csv_file_path,
-                   data: data,
-                   centroids : generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
-                   k: K,
-                   number_of_features: number_of_features,
-                   number_of_samples: number_of_samples,
-                   threshold : threshold,
-                   visuals: true
-    }
-}
 
-//This is the main logic behind, users should use this.
+
+//This is the main logic behind, user will use this.
 //Lower_limit and upper limit will be used in the random generation function.
-pub fn k_means(csv_file_path : &str,
-                k_value : usize,
-                lower_limit : f32,
-                upper_limit : f32,
-                Threshold : f32,
-                which_features: Vec<usize> ) -> k_means_spec
-{
+pub fn k_means( csv_file_path: &str,
+                k_value: usize,
+                lower_limit: f32,
+                upper_limit: f32,
+                Threshold: f32,
+                which_features: Vec<usize>) -> k_means_spec {
 
     //mut, because we will change the centroid values, after every iteration.
     let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, lower_limit, upper_limit , which_features);//now we have a data_set and its specifications to work on.
@@ -120,21 +250,30 @@ pub fn k_means(csv_file_path : &str,
     //clustering in k means until we get the centroid points moving less than threshold value after one iteration.
     //main loop
     loop {
-        //saving the points , to compare them afterwards.
+        //saving the points , to calculate the distance afterwards.
         let previous_centroids = present_dataFrame.centroids.clone();
-        println!("{:?}", present_dataFrame.centroids);
+        //debugging
+        //dbg!(&present_dataFrame.centroids);
         
         k_cluster(&mut present_dataFrame);
-        //changing the centroids based on the present sample points association, this is a method call directly implemented on the K_means_spec.
+        //changing the centroids based on the present sample points association, 
+        //this is a method call directly implemented on the K_means_spec.
         present_dataFrame.update_centroids();
 
         //if the largest change between any centroid respective to its previous position is leaa than the threshold value, we will break out of the loop.
-        if max_distance_between_sets(&previous_centroids , &present_dataFrame.centroids) < present_dataFrame.threshold {
+        let max_moved = max_distance_between_sets(&previous_centroids , &present_dataFrame.centroids);
+        if  max_moved < present_dataFrame.threshold {
+            println!("Max change while breaking out = {max_moved}");
             println!("Done!");
             break;
-        };
-        present_dataFrame.print_associates();                
+        } else {
+            println!("Max change in position ofany centroid = {max_moved}");
+        }
+
+        //debugging
+        //present_dataFrame.print_associates();                
         print!("\n");
+
         //if we have reached the end of the iteration, print the iteration number.
         println!("{} iteration done" , count);
         count += 1;
@@ -148,23 +287,29 @@ pub fn k_means(csv_file_path : &str,
 //This function will take the entire list of centroids and also the entire dataset.
 //i.e sets the associative field to the nearest centroid.
 fn k_cluster(total_df : &mut k_means_spec ) -> () {
+
+    let mut to_be_filled = vec![ 0 ; total_df.k ];
      
     for sample_point in 0..total_df.number_of_samples {
-        let mut present_nearest : (u32 , f32) = (1000 , std::f32::INFINITY);//initialising with obscure values so that this will for sure be updated.
+        let mut present_nearest : (usize , f32) = (1000 , std::f32::INFINITY);//initialising with obscure values so that this will for sure be updated.
         //now we have one sample in our hand, time to find out the nearest centroid to this.
         for cluster in 0..total_df.k {
             //Now we have a centroid and a sample point ;), time to to find out the distance.
             let dist_now = distance_between(&total_df.data[sample_point].data, &total_df.centroids[cluster]);
             
             if dist_now < present_nearest.1 {
-                present_nearest = (cluster as u32 , dist_now);
+                present_nearest = (cluster , dist_now);
             }
 
         }
         //storing the nearest centroid in the associated cluster field.
-        total_df.data[sample_point].associated_cluster = Some(present_nearest.0);
+        total_df.data[sample_point].associated_cluster = Some(present_nearest.0 as u32);
+        //updating the cluster_population field.
+        to_be_filled[present_nearest.0] += 1;
 
     }
+
+    total_df.cluster_populations = Some(to_be_filled);
     
 
 } 
@@ -175,8 +320,7 @@ use fastrand::Rng;
 fn generate_k_centroids(number_of_clusters : usize ,
                         number_of_features : usize ,
                         lower_limit : f32 , 
-                        upper_limit : f32) -> Vec<Vec<f32>> 
-{
+                        upper_limit : f32) -> Vec<Vec<f32>> {
     
     //creating an empty array cause now we know the size of the output.
     let mut out_centroids:Vec<Vec<f32>> = Vec::new();
@@ -206,7 +350,7 @@ use csv::ReaderBuilder;
 use crate::n_dimen::distance_between;
 use crate::n_dimen::max_distance_between_sets;
 
-pub fn csv_to_df(
+fn csv_to_df(
     file_path: &str,
     which_features: Vec<usize> ) -> Result<Vec<sample_point>, Box<dyn Error>> {
 
@@ -230,6 +374,7 @@ pub fn csv_to_df(
                     .collect::<Result<Vec<f32>, _>>()
                     .ok()?;
             } else {
+                //This is really safe, 'cause if the object cannot be parsed , then it will be not considered an error because of the .ok() , which returns None if there is an error.
                 // Consider only the columns specified by which_features
                 this_point.data = which_features
                     .iter()
@@ -245,4 +390,25 @@ pub fn csv_to_df(
         .collect::<Vec<_>>();
 
     Ok(full_dataset)
+}
+
+//creating a struct, which stores all the info about the present k_mean.
+fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32 , which_features: Vec<usize>) -> k_means_spec {
+    let data = csv_to_df(csv_file_path , which_features).unwrap();
+    //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
+    let number_of_features = data[0].data.len();
+    let number_of_samples = data.len();
+    //creating and returning a new k_means_spec struct.
+    k_means_spec {  csv_file_path: csv_file_path,
+                    data: data,
+                    centroids : generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
+                    k: K,
+                    number_of_features: number_of_features,
+                    number_of_samples: number_of_samples,
+                    threshold : threshold,
+                    visuals: true,
+                    encodings : None,
+                    varience: None,
+                    cluster_populations : None,
+    }
 }

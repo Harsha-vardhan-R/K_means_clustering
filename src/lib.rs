@@ -1,4 +1,4 @@
-#![allow(non_snake_case, non_camel_case_types, unused_mut, unused_imports , dead_code )]
+#![allow(unused_variables , non_snake_case, non_camel_case_types, unused_mut, unused_imports , dead_code )]
 /*
 Mostly using vectors because, using arrays really makes everything complicated and less flexible, 
 we are just using the indexing feature and not continuouslly changing the size of the vector,
