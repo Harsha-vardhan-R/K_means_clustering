@@ -29,17 +29,29 @@ impl k_means_spec<'_> {
     fn print(&self) {
         println!("{:?}", self );
     }
-
+    ///returns the population of each cluster.
+    /// 
+    /// '''
+    /// let df = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
+    /// let foo = df.print_populations();
+    /// '''
+    /// 
+    /// foo will be of the type vec<usize> and of length df.k.
     pub fn print_populations(&self) -> Vec<usize> {
         self.cluster_populations.clone().unwrap()
-    }
-
-    
+    }    
     //I do not even know if this can be done , we already opened the file once right?
     /* pub fn feature_names(&self) {
 
     } */
-
+    ///returns the population of each cluster.
+    /// 
+    /// '''
+    /// let df = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
+    /// //The vector should have the same number of elements as the number of clusters.
+    ///  
+    /// df.encoding_names(vec![String::from("one") , String::from("two") , ....])
+    /// '''
     pub fn encoding_names(&mut self , Names : Vec<String>) {
         //checking for the correct number of names 
         assert!(Names.len() == self.k , "The number of names provided do not match the k value");
@@ -47,13 +59,20 @@ impl k_means_spec<'_> {
         self.encodings = Some(Names);
 
     }
-
+    ///This function is more or less written for debugging , it contains important info but nobody can visualise the data that it outputs.
+    /// '''
+    /// let df = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
+    /// df.print_associates();
+    /// '''
+    /// prints each asssociates individually, not pretty to look at.
     pub fn print_associates(&self) {
         for associates in &self.data {
             print!("{}," , associates.associated_cluster.unwrap());
         }
     }
     //working, thank god!!!!!
+    ///function only works from inside so no need for docs , but.
+    //takes the whole data frame struct and changes the centroid coordinates by finding the AVERAGE of coords in that respective cluster.
     fn update_centroids(&mut self) {
         let mut centroids_with_count: Vec<(Vec<f32>, usize)> = vec![(vec![0.0; self.number_of_features], 0); self.k];
         
@@ -86,6 +105,7 @@ impl k_means_spec<'_> {
         
 
     }
+    ///Still need to write docs from here.
     //gives out a vector of variences of each feature in each cluster, and also gives out the number of points in each cluster.
     pub fn get_varience(&mut self) -> Vec<Vec<f32>> {
         //in a cluster the varience = sum((diff(samplepointfeature - associate centroid feature))^2) / number of the samplepoints in that particular cluster.
@@ -147,7 +167,7 @@ impl k_means_spec<'_> {
             let min = temp_vec[0];
             let max = temp_vec[temp_vec.len() - 1];
             //One feature done.
-            dbg!(max , min);
+            //dbg!(max , min);
             let diff = max - min;
             for i in 0..self.k {
                 mod_vec[i][feature_index] = (varience[i][feature_index] - min) / diff;
