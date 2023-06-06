@@ -10,7 +10,7 @@ pub struct sample_point {
 pub struct k_means_spec<'a> {
     csv_file_path : &'a str,
     data : Vec<sample_point>,
-    centroids : Vec<Vec<f32>>,
+    pub centroids : Vec<Vec<f32>>,
     k : usize,
     number_of_features : usize,
     number_of_samples : usize,
@@ -23,6 +23,7 @@ pub struct k_means_spec<'a> {
 
 use core::f32;
 use std::dbg;
+use fastrand::Rng;
 
 impl k_means_spec<'_> {
     
@@ -37,6 +38,7 @@ impl k_means_spec<'_> {
     /// '''
     /// 
     /// foo will be of the type vec<usize> and of length df.k.
+    
     pub fn print_populations(&self) -> Vec<usize> {
         self.cluster_populations.clone().unwrap()
     }    
@@ -71,7 +73,7 @@ impl k_means_spec<'_> {
         }
     }
     //working, thank god!!!!!
-    ///function only works from inside so no need for docs , but.
+    ///function only works from inside so no need for docs.
     //takes the whole data frame struct and changes the centroid coordinates by finding the AVERAGE of coords in that respective cluster.
     fn update_centroids(&mut self) {
         let mut centroids_with_count: Vec<(Vec<f32>, usize)> = vec![(vec![0.0; self.number_of_features], 0); self.k];
@@ -143,7 +145,7 @@ impl k_means_spec<'_> {
         out_vec
 
     }
-    //Under construction!
+    //to get 
     pub fn get_normal_varience(&mut self) -> Vec<Vec<f32>> {
 
         //getting the varience vector.
@@ -197,8 +199,7 @@ impl k_means_spec<'_> {
             let sum2: f32 = cluster.iter().sum();
             for t in 0..self.number_of_features {
                 temp2[i][t] = ((varience_normal[i][t] / sum2) * 10000.0).round() / 100.0;
-            }
-            
+            }            
         }
 
         temp2    
@@ -257,15 +258,23 @@ impl k_means_spec<'_> {
 
 //This is the main logic behind, user will use this.
 //Lower_limit and upper limit will be used in the random generation function.
+///'''
+///                                                           / This is a feature you, can select which features you want to consider while training, if it is empty all the features will be considered.
+///address of the csv data file-^                            ^      ^
+///let mut machine = k_means("IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
+///                                      ^    ^     ^this is the threshold value , that is the limiting value of maximum movement by any centroid while breaking out.
+///                                      |    \----this part can be a none or a some((f32, f32))
+///                                      \-----the number of clusters you want to form.
+/// if it is some then , we will generate a set of centroids for this data frame, whose fields are randomly generated.
+/// '''
 pub fn k_means( csv_file_path: &str,
                 k_value: usize,
-                lower_limit: f32,
-                upper_limit: f32,
+                limits: Option<(f32, f32)>,
                 Threshold: f32,
                 which_features: Vec<usize>) -> k_means_spec {
 
     //mut, because we will change the centroid values, after every iteration.
-    let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, lower_limit, upper_limit , which_features);//now we have a data_set and its specifications to work on.
+    let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, limits, which_features);//now we have a data_set and its specifications to work on.
     let mut count = 1;
     //clustering in k means until we get the centroid points moving less than threshold value after one iteration.
     //main loop
@@ -287,7 +296,7 @@ pub fn k_means( csv_file_path: &str,
             println!("Done!");
             break;
         } else {
-            println!("Max change in position ofany centroid = {max_moved}");
+            println!("Max change in position of any centroid = {max_moved}");
         }
 
         //debugging
@@ -334,7 +343,7 @@ fn k_cluster(total_df : &mut k_means_spec ) -> () {
 
 } 
 
-use fastrand::Rng;
+
 //This only generates random numbers , but do not worry about different ranges in different features, even if it contains one sample point,
 //while calculating the average they will set , keep your fingers crossed for it atleast catches one sample point.maybe will update in next version.
 fn generate_k_centroids(number_of_clusters : usize ,
@@ -359,6 +368,34 @@ fn generate_k_centroids(number_of_clusters : usize ,
     dbg!(&out_centroids);
     out_centroids
 
+}
+
+//Private function
+//randomly selects some points in the data sets ,to be taken as the initial centroid positions.
+//and obviously it cannot produce two same points.
+fn get_random_samples_from_df(data : &Vec<sample_point>, k: usize , number_of_features : usize, number_of_samples : usize) -> Vec<Vec<f32>> {
+    assert!(number_of_samples >= k, "You cannot have k greater than the number of all the points");
+    //here we randomly generate indexes without repeating.
+    let mut rand_index = vec![];
+    while rand_index.len() < k {
+        let mut rng = Rng::new();
+        let random_u32 = rng.u32(0..number_of_samples as u32);
+        if rand_index.contains(&random_u32) {
+            continue;
+        } else {
+            rand_index.push(random_u32);
+        }
+    }
+    let mut centroid: Vec<Vec<f32>> = vec![ vec![0.0 ; number_of_features] ; k];
+    dbg!(&rand_index);
+    //dbg!(&centroid);
+    for (index , i) in rand_index.into_iter().enumerate() {
+        for j in 0..number_of_features {
+            centroid[index][j] = data[i as usize].data[j];
+        }
+    }
+    dbg!(&centroid);
+    centroid
 }
 
 use std::error::Error;
@@ -413,15 +450,19 @@ fn csv_to_df(
 }
 
 //creating a struct, which stores all the info about the present k_mean.
-fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,lower_limit : f32 , upper_limit : f32 , which_features: Vec<usize>) -> k_means_spec {
+fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32, f32)> , which_features: Vec<usize>) -> k_means_spec { 
     let data = csv_to_df(csv_file_path , which_features).unwrap();
     //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
     let number_of_features = data[0].data.len();
     let number_of_samples = data.len();
     //creating and returning a new k_means_spec struct.
     k_means_spec {  csv_file_path: csv_file_path,
-                    data: data,
-                    centroids : generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
+                    centroids : match limits {
+                        //we will match the limits, if the user gives none, then we will take some random points as initial centroids.
+                        Some((lower_limit , upper_limit)) => generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
+                        None => get_random_samples_from_df(&data, K, number_of_features, number_of_samples),
+                    }, 
+                    data: data,                       
                     k: K,
                     number_of_features: number_of_features,
                     number_of_samples: number_of_samples,

@@ -1,0 +1,644 @@
+fn k_means_test_wine() {
+    let start_time = time::Instant::now();
+
+    let mut machine = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
+    //here we provide the names for previously stored just as k - encodings.//still not done.
+    //machine.encoding_names();
+    //predict.    still accuracy and testing functions are not written.
+    machine.encoding_names(vec!["cluster_1".to_owned() , "cluster_2".to_owned() , "cluster_3".to_owned()]);
+    machine.predict(&vec![ 14.23 , 1.71 , 2.43 , 15.6 , 127_f32 , 2.8 , 3.06 , 0.28 , 2.29 , 5.64 , 1.04 , 3.92  , 1065.0 ]);
+
+    dbg!(machine.get_varience());    
+    dbg!(machine.get_weights());
+    dbg!(&machine.centroids);
+    dbg!(machine.print_populations());
+    print!("Time Taken: ");
+    print!("{:?}\n", time::Instant::now() - start_time);
+}
+[src\K_Means_Clustering\k_means_clustering.rs:359] &out_centroids = [
+    [
+        10.41535,
+        11.582571,
+        13.34709,
+        12.999249,
+        14.666902,
+        12.632837,
+        13.041494,
+        10.430289,
+        12.226357,
+        12.947851,
+        12.05635,
+        10.142747,
+        10.547734,
+    ],
+    [
+        14.028124,
+        14.998875,
+        11.022335,
+        11.142031,
+        13.493666,
+        12.441978,
+        11.502341,
+        10.150002,
+        12.382317,
+        10.601338,
+        10.842542,
+        11.007677,
+        11.536771,
+    ],
+    [
+        14.5272255,
+        12.5419655,
+        13.204345,
+        11.98312,
+        10.056023,
+        14.379314,
+        12.746706,
+        13.391412,
+        10.9188385,
+        14.771398,
+        13.669712,
+        13.582035,
+        14.972621,
+    ],
+]
+Max change in position of any centroid = 738.1908
+
+1 iteration done
+Max change in position of any centroid = 332.48303
+
+2 iteration done
+Max change in position of any centroid = 122.5515
+
+3 iteration done
+Max change in position of any centroid = 93.46442
+
+4 iteration done
+Max change in position of any centroid = 79.24662
+
+5 iteration done
+Max change in position of any centroid = 44.566635
+
+6 iteration done
+Max change in position of any centroid = 9.5552025
+
+7 iteration done
+Max change in position of any centroid = 4.9398108
+
+8 iteration done
+Max change in position of any centroid = 278.5898
+
+9 iteration done
+Max change in position of any centroid = 84.08561
+
+10 iteration done
+Max change in position of any centroid = 39.728054
+
+11 iteration done
+Max change in position of any centroid = 45.59119
+
+12 iteration done
+Max change in position of any centroid = 21.093628
+
+13 iteration done
+Max change in position of any centroid = 10.263903
+
+14 iteration done
+Max change in position of any centroid = 4.537347
+
+15 iteration done
+Max change in position of any centroid = 2.197291
+
+16 iteration done
+Max change while breaking out = 0
+Done!
+[14.23, 1.71, 2.43, 15.6, 127.0, 2.8, 3.06, 0.28, 2.29, 5.64, 1.04, 3.92, 1065.0] Belongs to : index -> 2 -> Name : cluster_3
+[src\K_Means_Clustering\k_means_test.rs:23] machine.get_varience() = [
+    [
+        0.43843678,
+        1.5714824,
+        0.08907035,
+        9.88004,
+        105.7631,
+        0.3113401,
+        0.7134511,
+        0.014972436,
+        0.31126451,
+        4.692439,
+        0.06285373,
+        0.44767332,
+        6298.4097,
+    ],
+    [
+        0.47811127,
+        1.3798982,
+        0.07766076,
+        7.4202266,
+        271.3697,
+        0.33382943,
+        0.9078338,
+        0.018171592,
+        0.33601594,
+        7.155833,
+        0.052033875,
+        0.5774281,
+        8848.159,
+    ],
+    [
+        0.2110162,
+        0.2937799,
+        0.035474695,
+        8.802645,
+        121.82436,
+        0.13174766,
+        0.17298189,
+        0.004416388,
+        0.19291896,
+        1.6488786,
+        0.013720503,
+        0.12562832,
+        28822.928,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:24] machine.get_weights() = [
+    [
+        8.65,
+        10.17,
+        10.53,
+        12.04,
+        0.0,
+        8.85,
+        7.97,
+        8.17,
+        8.52,
+        6.7,
+        10.57,
+        7.83,
+        0.0,
+    ],
+    [
+        8.52,
+        7.25,
+        6.95,
+        0.0,
+        14.38,
+        8.35,
+        9.09,
+        8.93,
+        8.64,
+        10.16,
+        6.91,
+        9.21,
+        1.6,
+    ],
+    [
+        0.0,
+        0.0,
+        0.0,
+        26.72,
+        6.57,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        66.71,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:25] &machine.centroids = [
+    [
+        12.516667,
+        2.4942029,
+        2.288551,
+        20.823189,
+        92.347824,
+        2.0707247,
+        1.7584054,
+        0.39014488,
+        1.451884,
+        4.0869565,
+        0.9411594,
+        2.490725,
+        458.23187,
+    ],
+    [
+        12.92984,
+        2.504032,
+        2.408064,
+        19.890322,
+        103.59677,
+        2.111129,
+        1.5840322,
+        0.38838714,
+        1.5033873,
+        5.6503234,
+        0.8839677,
+        2.365484,
+        728.3387,
+    ],
+    [
+        13.804467,
+        1.8834044,
+        2.42617,
+        17.023407,
+        105.510635,
+        2.8672333,
+        3.014255,
+        0.28531918,
+        1.9104257,
+        5.702553,
+        1.0782979,
+        3.1140425,
+        1195.1489,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:26] machine.print_populations() = [
+    69,
+    62,
+    47,
+]
+Time Taken: 195.3988ms
+test K_Means_Clustering::k_means_test::k_means_clustering_tests::k_means_test_wine ... ok
+
+
+
+fn k_means_test_iris() {
+    let start_time = time::Instant::now();
+
+    let mut machine = k_means("IRIS.csv", 3, 0.0, 8.0, 0.001 , vec![0,1,2,3]);
+     
+    dbg!(machine.print_populations());
+    //dbg!(machine.get_weights());
+    dbg!(machine.centroids);
+
+    print!("Time Taken: ");
+    print!("{:?}\n", time::Instant::now() - start_time);
+}
+
+
+[src\K_Means_Clustering\k_means_clustering.rs:359] &out_centroids = [
+    [
+        2.3081675,
+        3.03187,
+        0.002398491,
+        2.852703,
+    ],
+    [
+        2.651371,
+        7.1154737,
+        2.1797237,
+        1.990035,
+    ],
+    [
+        3.4038553,
+        7.377657,
+        4.4256325,
+        6.5235987,
+    ],
+]
+Max change in position of any centroid = 7.4532876
+
+1 iteration done
+Max change in position of any centroid = 0.744343
+
+2 iteration done
+Max change in position of any centroid = 0.33931607
+
+3 iteration done
+Max change in position of any centroid = 0.25158644
+
+4 iteration done
+Max change in position of any centroid = 0.14936091
+
+5 iteration done
+Max change in position of any centroid = 0.06976592
+
+6 iteration done
+Max change in position of any centroid = 0.049702723
+
+7 iteration done
+Max change while breaking out = 0
+Done!
+[src\K_Means_Clustering\k_means_test.rs:38] machine.print_populations() = [
+    50,
+    62,
+    38,
+]
+[src\K_Means_Clustering\k_means_test.rs:40] machine.centroids = [
+    [
+        5.0059996,
+        3.4180002,
+        1.464,
+        0.24399997,
+    ],
+    [
+        5.901613,
+        2.7483873,
+        4.393549,
+        1.4338712,
+    ],
+    [
+        6.849999,
+        3.0736842,
+        5.742105,
+        2.0710528,
+    ],
+]
+Time Taken: 68.4569ms
+test K_Means_Clustering::k_means_test::k_means_clustering_tests::k_means_test_iris ... ok
+////////////////
+after taking random points as samples we are not getting any zero .
+[src\K_Means_Clustering\k_means_clustering.rs:389] &rand_index = [
+    79,
+    132,
+    69,
+]
+[src\K_Means_Clustering\k_means_clustering.rs:396] &centroid = [
+    [
+        5.7,
+        2.6,
+        3.5,
+        1.0,
+    ],
+    [
+        6.4,
+        2.8,
+        5.6,
+        2.2,
+    ],
+    [
+        5.6,
+        2.5,
+        3.9,
+        1.1,
+    ],
+]
+Max change in position of any centroid = 2.2220154
+
+1 iteration done
+Max change in position of any centroid = 0.20436712
+
+2 iteration done
+Max change in position of any centroid = 0.102495976
+
+3 iteration done
+Max change in position of any centroid = 0.06304324
+
+4 iteration done
+Max change in position of any centroid = 0.07041891
+
+5 iteration done
+Max change in position of any centroid = 0.032459524
+
+6 iteration done
+Max change while breaking out = 0
+Done!
+[src\K_Means_Clustering\k_means_test.rs:40] machine.print_populations() = [
+    50,
+    39,
+    61,
+]
+[src\K_Means_Clustering\k_means_test.rs:42] machine.centroids = [
+    [
+        5.0059996,
+        3.4180002,
+        1.464,
+        0.24399997,
+    ],
+    [
+        6.853844,
+        3.0769234,
+        5.715385,
+        2.0538464,
+    ],
+    [
+        5.8836064,
+        2.7409837,
+        4.388525,
+        1.4344264,
+    ],
+]
+Time Taken: 19.6471ms
+test K_Means_Clustering::k_means_test::k_means_clustering_tests::k_means_test_iris ... ok
+///////////////////////
+wine after taking random sample points as initial centroids.
+[src\K_Means_Clustering\k_means_clustering.rs:390] &rand_index = [
+    44,
+    159,
+    139,
+]
+[src\K_Means_Clustering\k_means_clustering.rs:397] &centroid = [
+    [
+        13.05,
+        1.77,
+        2.1,
+        17.0,
+        107.0,
+        3.0,
+        3.0,
+        0.28,
+        2.03,
+        5.04,
+        0.88,
+        3.35,
+        885.0,
+    ],
+    [
+        13.48,
+        1.67,
+        2.64,
+        22.5,
+        89.0,
+        2.6,
+        1.1,
+        0.52,
+        2.29,
+        11.75,
+        0.57,
+        1.78,
+        620.0,
+    ],
+    [
+        12.84,
+        2.96,
+        2.61,
+        24.0,
+        101.0,
+        2.32,
+        0.6,
+        0.53,
+        0.81,
+        4.92,
+        0.89,
+        2.15,
+        590.0,
+    ],
+]
+Max change in position of any centroid = 201.18196
+
+1 iteration done
+Max change in position of any centroid = 81.43347
+
+2 iteration done
+Max change in position of any centroid = 22.176882
+
+3 iteration done
+Max change in position of any centroid = 8.008532
+
+4 iteration done
+Max change in position of any centroid = 2.197291
+
+5 iteration done
+Max change while breaking out = 0
+Done!
+[14.23, 1.71, 2.43, 15.6, 127.0, 2.8, 3.06, 0.28, 2.29, 5.64, 1.04, 3.92, 1065.0] Belongs to : index -> 0 -> Name : cluster_1
+[src\K_Means_Clustering\k_means_test.rs:24] machine.get_varience() = [
+    [
+        0.2110162,
+        0.2937799,
+        0.035474695,
+        8.802645,
+        121.82436,
+        0.13174766,
+        0.17298189,
+        0.004416388,
+        0.19291896,
+        1.6488786,
+        0.013720503,
+        0.12562832,
+        28822.928,
+    ],
+    [
+        0.47811127,
+        1.3798982,
+        0.07766076,
+        7.4202266,
+        271.3697,
+        0.33382943,
+        0.9078338,
+        0.018171592,
+        0.33601594,
+        7.155833,
+        0.052033875,
+        0.5774281,
+        8848.159,
+    ],
+    [
+        0.43843678,
+        1.5714824,
+        0.08907035,
+        9.88004,
+        105.7631,
+        0.3113401,
+        0.7134511,
+        0.014972436,
+        0.31126451,
+        4.692439,
+        0.06285373,
+        0.44767332,
+        6298.4097,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:25] machine.get_weights() = [
+    [
+        0.0,
+        0.0,
+        0.0,
+        26.72,
+        6.57,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        66.71,
+    ],
+    [
+        8.52,
+        7.25,
+        6.95,
+        0.0,
+        14.38,
+        8.35,
+        9.09,
+        8.93,
+        8.64,
+        10.16,
+        6.91,
+        9.21,
+        1.6,
+    ],
+    [
+        8.65,
+        10.17,
+        10.53,
+        12.04,
+        0.0,
+        8.85,
+        7.97,
+        8.17,
+        8.52,
+        6.7,
+        10.57,
+        7.83,
+        0.0,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:26] &machine.centroids = [
+    [
+        13.804467,
+        1.8834044,
+        2.42617,
+        17.023407,
+        105.510635,
+        2.8672333,
+        3.014255,
+        0.28531918,
+        1.9104257,
+        5.702553,
+        1.0782979,
+        3.1140425,
+        1195.1489,
+    ],
+    [
+        12.92984,
+        2.504032,
+        2.408064,
+        19.890322,
+        103.59677,
+        2.111129,
+        1.5840322,
+        0.38838714,
+        1.5033873,
+        5.6503234,
+        0.8839677,
+        2.365484,
+        728.3387,
+    ],
+    [
+        12.516667,
+        2.4942029,
+        2.288551,
+        20.823189,
+        92.347824,
+        2.0707247,
+        1.7584054,
+        0.39014488,
+        1.451884,
+        4.0869565,
+        0.9411594,
+        2.490725,
+        458.23187,
+    ],
+]
+[src\K_Means_Clustering\k_means_test.rs:27] machine.print_populations() = [
+    47,
+    62,
+    69,
+]
+Time Taken: 79.6054ms
+test K_Means_Clustering::k_means_test::k_means_clustering_tests::k_means_test_wine ... ok
