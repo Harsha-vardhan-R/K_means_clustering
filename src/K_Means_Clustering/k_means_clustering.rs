@@ -22,8 +22,15 @@ pub struct k_means_spec<'a> {
 }
 
 use core::f32;
+use core::num;
 use std::dbg;
+use std::marker;
 use fastrand::Rng;
+//use plotters::prelude::*;
+use plotlib::page::Page;
+use plotlib::repr::{Histogram, HistogramBins, Plot};
+use plotlib::style::{BoxStyle, PointMarker, PointStyle};
+use plotlib::view::ContinuousView;
 
 impl k_means_spec<'_> {
     
@@ -37,8 +44,7 @@ impl k_means_spec<'_> {
     /// let foo = df.print_populations();
     /// '''
     /// 
-    /// foo will be of the type vec<usize> and of length df.k.
-    
+    /// foo will be of the type vec<usize> and of length df.k.    
     pub fn print_populations(&self) -> Vec<usize> {
         self.cluster_populations.clone().unwrap()
     }    
@@ -66,13 +72,12 @@ impl k_means_spec<'_> {
     /// let df = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
     /// df.print_associates();
     /// '''
-    /// prints each asssociates individually, not pretty to look at.
+    /// prints each asssociated clusters individually, not pretty to look at.
     pub fn print_associates(&self) {
         for associates in &self.data {
             print!("{}," , associates.associated_cluster.unwrap());
         }
     }
-    //working, thank god!!!!!
     ///function only works from inside so no need for docs.
     //takes the whole data frame struct and changes the centroid coordinates by finding the AVERAGE of coords in that respective cluster.
     fn update_centroids(&mut self) {
@@ -107,7 +112,6 @@ impl k_means_spec<'_> {
         
 
     }
-    ///Still need to write docs from here.
     //gives out a vector of variences of each feature in each cluster, and also gives out the number of points in each cluster.
     pub fn get_varience(&mut self) -> Vec<Vec<f32>> {
         //in a cluster the varience = sum((diff(samplepointfeature - associate centroid feature))^2) / number of the samplepoints in that particular cluster.
@@ -145,7 +149,8 @@ impl k_means_spec<'_> {
         out_vec
 
     }
-    //to get 
+    //to get the variences of different features, normalisation done across different clusters so you will get some zeros for some features
+    //minimums are zeros here.
     pub fn get_normal_varience(&mut self) -> Vec<Vec<f32>> {
 
         //getting the varience vector.
@@ -205,7 +210,13 @@ impl k_means_spec<'_> {
         temp2    
 
     }
-    
+    ///'''
+    /// the predict function takes a point and gives out the nearest centroid to it.
+    /// let df = k_means("wine-clustering.csv", 3, 10.0, 15.0, 0.01 , vec![]);
+    /// df.predict();
+    /// '''
+    /// 
+    /// prints the cluster name associated with the nearest centroid.
     pub fn predict(&self, x: &Vec<f32>) -> u32 {
         let mut present_min_dist_with = f32::INFINITY;
         let mut closest_centroid_index = 0;
@@ -226,41 +237,104 @@ impl k_means_spec<'_> {
         println!("{:?} Belongs to : index -> {} -> Name : {}", x , closest_centroid_index , pressent_name);
         closest_centroid_index as u32
     }
+    //here we write the plotting stuff.
+    //we need to consider 1 , 2 , 3  or more than 3 features.
+    pub fn plot(&self , path : &str) {
+        match self.number_of_features {
+            1 => self.plot_one_dimension(path , 0 , "feature", "number"),
+            2 => self.plot_two_dimension(path),
+            3 => self.plot_three_dimension(path),
+            4..=1000 => self.plot_more_than_three_dimen(path),   
+            _  => (),//if your df has more than 1000 features or no features at all, fuck you, Ezekiel!.     
+        }    
+    }
 
-    //Really temporary function.
-    /* pub fn plot_clusters(&self) -> Result<() , Box<dyn std::error::Error>> {
+    pub fn plot_distributions(&self) {
+        
+    }
 
-        if self.visuals == false {
-            panic!("But you did not want visuals , and now you are asking for it!");
+    //private functions for plotting of different number of features.
+    pub fn plot_one_dimension(&self , path : &str, pointindex : usize, x_lable : &str, y_label : &str) {
+        //first we will get the dataset then we can set the graph scale
+        let mut data_to_plot: Vec<(f64 , f64)> = vec![ (0.0 , 0.0) ; self.number_of_samples];
+        let mut min = 100000 as f64;
+        let mut max = -100 as f64;//temporary////be careful values obviously can go lower than that.
+        for (index, sample_point) in self.data.iter().enumerate() {
+            data_to_plot[index] = (sample_point.data[pointindex].clone().try_into().unwrap(), 0.0);
+            if data_to_plot[index].0 > max {
+                max = data_to_plot[index].0;
+            } else if data_to_plot[index].0 < min {
+                min = data_to_plot[index].0;
+            }
+        } 
+
+        /* let number_of_divisions = 30;//This is my code for putting the data in histogram bins but the plotlib library already contains this so, we will directly use that.
+        let mut distribution_vector = vec![0.0 as f64; number_of_divisions];
+        let gradient = (max - min) / number_of_divisions as f64;
+        let mut set = 0;
+        for i in &data_to_plot {
+            set = 0;
+            for n in 0..number_of_divisions { 
+                set += 1;             
+                if i.0 < ((gradient * set as f64) + min) {
+                    print!("{}  ,  ", &i.0);
+                    print!("{}\n", (gradient * n as f64) + min);
+                    break;
+                }
+            }
+            distribution_vector[set - 1] += 1.0;
         }
 
-        let mut x = vec![];
-        let mut y = vec![];
-        let mut z = vec![];
-
-        for sample_point in &self.data {
-            x.push(sample_point.data[0]);
-            y.push(sample_point.data[1]);
-            z.push(sample_point.data[2]);
+        dbg!(&distribution_vector);
+        let sum: f64 = distribution_vector.iter().sum();
+        dbg!(sum); */
+        let mut temppp = vec![];
+        for i in data_to_plot.iter() {
+            temppp.push(i.0);
         }
 
-        ax.points(&x, &y, &z, &[]);
+        let h  = Histogram::from_slice(temppp.as_slice(), HistogramBins::Count(30))
+            .style(&BoxStyle::new().fill("burlywood"));
+         
 
-        // Show the plot in a window
-        fg.show()?;
-    
-        Ok(()) 
-    
-    } */
-    
+        let s1: Plot = Plot::new(data_to_plot).point_style(
+            PointStyle::new()
+            .marker(PointMarker::Square)
+            .colour("FFFFFF"),
+        );
+
+        let v = ContinuousView::new()
+            .add(h)
+            .add(s1)
+            .x_range(min, max)
+            .y_range(0.0, 25.0)
+            .x_label(x_lable)
+            .y_label(y_label);
+
+        Page::single(&v).save("one_dimen_hava.svg").unwrap();
+        
+    }
+
+    fn plot_two_dimension(&self , path : &str) {
+
+    }
+
+    fn plot_three_dimension(&self , path : &str) {
+
+    }
+
+    fn plot_more_than_three_dimen(&self , path : &str) {
+
+    }
+
+
+
 }
-
-
 //This is the main logic behind, user will use this.
 //Lower_limit and upper limit will be used in the random generation function.
 ///'''
 ///                                                           / This is a feature you, can select which features you want to consider while training, if it is empty all the features will be considered.
-///address of the csv data file-^                            ^      ^
+///address of the csv data file-^                            ^      
 ///let mut machine = k_means("IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
 ///                                      ^    ^     ^this is the threshold value , that is the limiting value of maximum movement by any centroid while breaking out.
 ///                                      |    \----this part can be a none or a some((f32, f32))
@@ -432,7 +506,7 @@ fn csv_to_df(
                     .ok()?;
             } else {
                 //This is really safe, 'cause if the object cannot be parsed , then it will be not considered an error because of the .ok() , which returns None if there is an error.
-                // Consider only the columns specified by which_features
+                // Consider only the columns specified by which_features/also problematic, if the data has some null or NaN's , we are fucked!
                 this_point.data = which_features
                     .iter()
                     .map(|&i| record.get(i))
