@@ -1,0 +1,77 @@
+<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(72, 364)">
+<g>
+<rect fill="burlywood" height="340" stroke="black" width="32" x="0" y="-340"/>
+<rect fill="burlywood" height="140" stroke="black" width="32" x="32" y="-140"/>
+<rect fill="burlywood" height="10" stroke="black" width="32.000000000000014" x="64" y="-10"/>
+<rect fill="burlywood" height="10" stroke="black" width="31.999999999999986" x="96.00000000000001" y="-10"/>
+<rect fill="burlywood" height="0" stroke="black" width="32" x="128" y="-0"/>
+<rect fill="burlywood" height="70" stroke="black" width="32.00000000000003" x="160" y="-70"/>
+<rect fill="burlywood" height="80" stroke="black" width="31.99999999999997" x="192.00000000000003" y="-80"/>
+<rect fill="burlywood" height="130" stroke="black" width="32" x="224" y="-130"/>
+<rect fill="burlywood" height="200" stroke="black" width="32" x="256" y="-200"/>
+<rect fill="burlywood" height="40" stroke="black" width="32" x="288" y="-40"/>
+<rect fill="burlywood" height="140" stroke="black" width="32" x="320" y="-140"/>
+<rect fill="burlywood" height="110" stroke="black" width="32.00000000000006" x="352" y="-110"/>
+<rect fill="burlywood" height="60" stroke="black" width="31.999999999999943" x="384.00000000000006" y="-60"/>
+<rect fill="burlywood" height="110" stroke="black" width="32" x="416" y="-110"/>
+<rect fill="burlywood" height="60" stroke="black" width="32" x="448" y="-60"/>
+</g>
+<g>
+<g>
+<line stroke="black" stroke-width="1" x1="-0.00000029802322295176725" x2="-0.00000029802322295176725" y1="0" y2="10"/>
+<line stroke="black" stroke-width="1" x1="99.99999976406495" x2="99.99999976406495" y1="0" y2="10"/>
+<line stroke="black" stroke-width="1" x1="199.99999982615313" x2="199.99999982615313" y1="0" y2="10"/>
+<line stroke="black" stroke-width="1" x1="299.9999998882413" x2="299.9999998882413" y1="0" y2="10"/>
+<line stroke="black" stroke-width="1" x1="399.9999999503295" x2="399.9999999503295" y1="0" y2="10"/>
+</g>
+<line stroke="black" stroke-width="1" x1="0" x2="480" y1="0" y2="0"/>
+<g>
+<text font-size="12" text-anchor="middle" x="-0.00000029802322295176725" y="20">
+0.1
+</text>
+<text font-size="12" text-anchor="middle" x="99.99999976406495" y="20">
+0.6
+</text>
+<text font-size="12" text-anchor="middle" x="199.99999982615313" y="20">
+1.1
+</text>
+<text font-size="12" text-anchor="middle" x="299.9999998882413" y="20">
+1.6
+</text>
+<text font-size="12" text-anchor="middle" x="399.9999999503295" y="20">
+2.1
+</text>
+</g>
+<text font-size="12" text-anchor="middle" x="240" y="30">
+petal_width
+</text>
+</g>
+<g>
+<g>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-0" y2="-0"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-100" y2="-100"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-200" y2="-200"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-300" y2="-300"/>
+</g>
+<line stroke="black" stroke-width="1" x1="0" x2="0" y1="0" y2="-340"/>
+<g>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-0">
+0
+</text>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-100">
+10
+</text>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-200">
+20
+</text>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-300">
+30
+</text>
+</g>
+<text font-size="12" text-anchor="middle" transform="rotate(-90 -24 -170)" x="-24" y="-182">
+intensity
+</text>
+</g>
+</g>
+</svg>

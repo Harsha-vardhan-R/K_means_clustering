@@ -36,7 +36,7 @@ fn k_means_test_iris() {
 
     //let mut machine = k_means("IRIS.csv", 3, Some((0.0, 8.0)), 0.001 , vec![0,1,2,3]);
     let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
-     
+    machine.get_distributions();
     dbg!(&machine.print_populations());
     dbg!(&machine.get_varience());
     dbg!(&machine.get_weights());

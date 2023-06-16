@@ -9,6 +9,7 @@ pub struct sample_point {
 #[derive(Debug)]
 pub struct k_means_spec<'a> {
     csv_file_path : &'a str,
+    pub header_names : Vec<String>,
     data : Vec<sample_point>,
     pub centroids : Vec<Vec<f32>>,
     k : usize,
@@ -25,6 +26,7 @@ use core::f32;
 use core::num;
 use std::dbg;
 use std::marker;
+use std::string;
 use fastrand::Rng;
 //use plotters::prelude::*;
 use plotlib::page::Page;
@@ -266,9 +268,9 @@ impl k_means_spec<'_> {
             } else if data_to_plot[index].0 < min {
                 min = data_to_plot[index].0;
             }
-        } 
+        }
 
-        /* let number_of_divisions = 30;//This is my code for putting the data in histogram bins but the plotlib library already contains this so, we will directly use that.
+        /* let number_of_divisions = 30;//This is my code for putting the data in histogram bins but the plotlib library already contains this so, we will directly use it.
         let mut distribution_vector = vec![0.0 as f64; number_of_divisions];
         let gradient = (max - min) / number_of_divisions as f64;
         let mut set = 0;
@@ -293,25 +295,29 @@ impl k_means_spec<'_> {
             temppp.push(i.0);
         }
 
-        let h  = Histogram::from_slice(temppp.as_slice(), HistogramBins::Count(30))
-            .style(&BoxStyle::new().fill("burlywood"));
-         
+        let h  = Histogram::from_slice(temppp.as_slice(), HistogramBins::Count(15))
+            .style(&BoxStyle::new().fill("burlywood"));//the count needs to be taken care of,I think we should change it according to the data.
+        let mut max_on_y = f64::MIN;
+        for i in h.bin_counts.iter() {
+            if *i > max_on_y {
+                max_on_y = *i;
+            }
+        }
 
-        let s1: Plot = Plot::new(data_to_plot).point_style(
+        /* let s1: Plot = Plot::new(data_to_plot).point_style(
             PointStyle::new()
             .marker(PointMarker::Square)
             .colour("FFFFFF"),
-        );
+        ); *///this looks like shit .
 
         let v = ContinuousView::new()
             .add(h)
-            .add(s1)
             .x_range(min, max)
-            .y_range(0.0, 25.0)
+            .y_range(0.0, max_on_y)
             .x_label(x_lable)
             .y_label(y_label);
 
-        Page::single(&v).save("one_dimen_hava.svg").unwrap();
+        Page::single(&v).save(path).unwrap();
         
     }
 
@@ -326,8 +332,15 @@ impl k_means_spec<'_> {
     fn plot_more_than_three_dimen(&self , path : &str) {
 
     }
+    //NOTE: This method does not work if you only consider some features  
 
-
+    pub fn get_distributions(&self) {
+        for i in 0..self.number_of_features {
+            let image_name = format!("distribution_plot_of_{}.svg", &self.header_names[i]);
+            self.plot_one_dimension(&image_name, i, &self.header_names[i], "intensity/Distribution");
+            print!("Done\n");
+        }
+    }
 
 }
 //This is the main logic behind, user will use this.
@@ -522,8 +535,25 @@ fn csv_to_df(
 
     Ok(full_dataset)
 }
+///warning this does not implement only selected features implementation, please! this is not even experimental.
+fn get_headers(path : &str) -> Vec<String> {
+    let file_system = File::open(path).unwrap();
+    let mut out_vector : Vec<String> = vec![];
+    let reader = BufReader::new(file_system);
+    let mut csv_header = ReaderBuilder::new().has_headers(false).from_reader(reader);
+    for header in csv_header.records() {
+        let head = header.unwrap();
+        for i in head.iter() {
+            out_vector.push(i.to_owned());
+        }
+        break;
+    }
+
+    out_vector
+}
 
 //creating a struct, which stores all the info about the present k_mean.
+//private function.
 fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32, f32)> , which_features: Vec<usize>) -> k_means_spec { 
     let data = csv_to_df(csv_file_path , which_features).unwrap();
     //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
@@ -535,7 +565,8 @@ fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32
                         //we will match the limits, if the user gives none, then we will take some random points as initial centroids.
                         Some((lower_limit , upper_limit)) => generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
                         None => get_random_samples_from_df(&data, K, number_of_features, number_of_samples),
-                    }, 
+                    },
+                    header_names : get_headers(csv_file_path),
                     data: data,                       
                     k: K,
                     number_of_features: number_of_features,
