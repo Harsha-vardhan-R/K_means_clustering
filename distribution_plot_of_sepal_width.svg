@@ -1,21 +1,21 @@
 <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
 <g transform="translate(72, 364)">
 <g>
-<rect fill="burlywood" height="8.947368421052632" stroke="black" width="31.99999999999997" x="0" y="-8.947368421052632"/>
-<rect fill="burlywood" height="62.63157894736842" stroke="black" width="32.00000000000006" x="31.99999999999997" y="-62.63157894736842"/>
-<rect fill="burlywood" height="26.842105263157894" stroke="black" width="31.99999999999997" x="64.00000000000003" y="-26.842105263157894"/>
-<rect fill="burlywood" height="116.3157894736842" stroke="black" width="31.99999999999997" x="96" y="-116.3157894736842"/>
-<rect fill="burlywood" height="205.78947368421052" stroke="black" width="31.99999999999997" x="127.99999999999997" y="-205.78947368421052"/>
-<rect fill="burlywood" height="89.47368421052632" stroke="black" width="32.00000000000006" x="159.99999999999994" y="-89.47368421052632"/>
-<rect fill="burlywood" height="340" stroke="black" width="32.00000000000006" x="192" y="-340"/>
-<rect fill="burlywood" height="116.3157894736842" stroke="black" width="31.999999999999886" x="224.00000000000006" y="-116.3157894736842"/>
-<rect fill="burlywood" height="161.05263157894737" stroke="black" width="32.00000000000006" x="255.99999999999994" y="-161.05263157894737"/>
-<rect fill="burlywood" height="80.52631578947368" stroke="black" width="31.999999999999943" x="288" y="-80.52631578947368"/>
-<rect fill="burlywood" height="26.842105263157894" stroke="black" width="32" x="319.99999999999994" y="-26.842105263157894"/>
-<rect fill="burlywood" height="71.57894736842105" stroke="black" width="32.00000000000006" x="351.99999999999994" y="-71.57894736842105"/>
-<rect fill="burlywood" height="8.947368421052632" stroke="black" width="31.999999999999886" x="384" y="-8.947368421052632"/>
-<rect fill="burlywood" height="17.894736842105264" stroke="black" width="32.00000000000023" x="415.9999999999999" y="-17.894736842105264"/>
-<rect fill="burlywood" height="8.947368421052632" stroke="black" width="31.999999999999886" x="448.0000000000001" y="-8.947368421052632"/>
+<rect fill="burlywood" height="8.292682926829269" stroke="black" width="31.99999999999997" x="0" y="-8.292682926829269"/>
+<rect fill="burlywood" height="58.048780487804876" stroke="black" width="32.00000000000006" x="31.99999999999997" y="-58.048780487804876"/>
+<rect fill="burlywood" height="24.878048780487806" stroke="black" width="31.99999999999997" x="64.00000000000003" y="-24.878048780487806"/>
+<rect fill="burlywood" height="107.8048780487805" stroke="black" width="31.99999999999997" x="96" y="-107.8048780487805"/>
+<rect fill="burlywood" height="190.73170731707316" stroke="black" width="31.99999999999997" x="127.99999999999997" y="-190.73170731707316"/>
+<rect fill="burlywood" height="82.92682926829268" stroke="black" width="32.00000000000006" x="159.99999999999994" y="-82.92682926829268"/>
+<rect fill="burlywood" height="315.1219512195122" stroke="black" width="32.00000000000006" x="192" y="-315.1219512195122"/>
+<rect fill="burlywood" height="107.8048780487805" stroke="black" width="31.999999999999886" x="224.00000000000006" y="-107.8048780487805"/>
+<rect fill="burlywood" height="149.26829268292684" stroke="black" width="32.00000000000006" x="255.99999999999994" y="-149.26829268292684"/>
+<rect fill="burlywood" height="74.63414634146342" stroke="black" width="31.999999999999943" x="288" y="-74.63414634146342"/>
+<rect fill="burlywood" height="24.878048780487806" stroke="black" width="32" x="319.99999999999994" y="-24.878048780487806"/>
+<rect fill="burlywood" height="66.34146341463415" stroke="black" width="32.00000000000006" x="351.99999999999994" y="-66.34146341463415"/>
+<rect fill="burlywood" height="8.292682926829269" stroke="black" width="31.999999999999886" x="384" y="-8.292682926829269"/>
+<rect fill="burlywood" height="16.585365853658537" stroke="black" width="32.00000000000023" x="415.9999999999999" y="-16.585365853658537"/>
+<rect fill="burlywood" height="8.292682926829269" stroke="black" width="31.999999999999886" x="448.0000000000001" y="-8.292682926829269"/>
 </g>
 <g>
 <g>
@@ -50,27 +50,31 @@ sepal_width
 <g>
 <g>
 <line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-0" y2="-0"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-89.47368421052632" y2="-89.47368421052632"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-178.94736842105263" y2="-178.94736842105263"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-268.42105263157896" y2="-268.42105263157896"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-82.92682926829268" y2="-82.92682926829268"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-165.85365853658536" y2="-165.85365853658536"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-248.78048780487805" y2="-248.78048780487805"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-331.7073170731707" y2="-331.7073170731707"/>
 </g>
 <line stroke="black" stroke-width="1" x1="0" x2="0" y1="0" y2="-340"/>
 <g>
 <text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-0">
 0
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-89.47368421052632">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-82.92682926829268">
 10
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-178.94736842105263">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-165.85365853658536">
 20
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-268.42105263157896">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-248.78048780487805">
 30
+</text>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-331.7073170731707">
+40
 </text>
 </g>
 <text font-size="12" text-anchor="middle" transform="rotate(-90 -24 -170)" x="-24" y="-182">
-intensity
+intensity/Distribution
 </text>
 </g>
 </g>

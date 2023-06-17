@@ -1,21 +1,21 @@
 <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
 <g transform="translate(72, 364)">
 <g>
-<rect fill="burlywood" height="101.08108108108108" stroke="black" width="31.99999999999999" x="0" y="-101.08108108108108"/>
-<rect fill="burlywood" height="340" stroke="black" width="32.000000000000014" x="31.99999999999999" y="-340"/>
-<rect fill="burlywood" height="18.37837837837838" stroke="black" width="32.000000000000014" x="64" y="-18.37837837837838"/>
+<rect fill="burlywood" height="93.5" stroke="black" width="31.99999999999999" x="0" y="-93.5"/>
+<rect fill="burlywood" height="314.5" stroke="black" width="32.000000000000014" x="31.99999999999999" y="-314.5"/>
+<rect fill="burlywood" height="17" stroke="black" width="32.000000000000014" x="64" y="-17"/>
 <rect fill="burlywood" height="0" stroke="black" width="31.999999999999986" x="96.00000000000001" y="-0"/>
 <rect fill="burlywood" height="0" stroke="black" width="32" x="128" y="-0"/>
-<rect fill="burlywood" height="27.56756756756757" stroke="black" width="32" x="160" y="-27.56756756756757"/>
-<rect fill="burlywood" height="36.75675675675676" stroke="black" width="32" x="192" y="-36.75675675675676"/>
-<rect fill="burlywood" height="110.27027027027027" stroke="black" width="32" x="224" y="-110.27027027027027"/>
-<rect fill="burlywood" height="165.40540540540542" stroke="black" width="31.999999999999943" x="256" y="-165.40540540540542"/>
-<rect fill="burlywood" height="156.21621621621622" stroke="black" width="32.00000000000006" x="287.99999999999994" y="-156.21621621621622"/>
-<rect fill="burlywood" height="147.02702702702703" stroke="black" width="31.999999999999943" x="320" y="-147.02702702702703"/>
-<rect fill="burlywood" height="128.64864864864865" stroke="black" width="32.00000000000006" x="351.99999999999994" y="-128.64864864864865"/>
-<rect fill="burlywood" height="91.89189189189189" stroke="black" width="32" x="384" y="-91.89189189189189"/>
-<rect fill="burlywood" height="18.37837837837838" stroke="black" width="32" x="416" y="-18.37837837837838"/>
-<rect fill="burlywood" height="36.75675675675676" stroke="black" width="32" x="448" y="-36.75675675675676"/>
+<rect fill="burlywood" height="25.5" stroke="black" width="32" x="160" y="-25.5"/>
+<rect fill="burlywood" height="34" stroke="black" width="32" x="192" y="-34"/>
+<rect fill="burlywood" height="102" stroke="black" width="32" x="224" y="-102"/>
+<rect fill="burlywood" height="153" stroke="black" width="31.999999999999943" x="256" y="-153"/>
+<rect fill="burlywood" height="144.5" stroke="black" width="32.00000000000006" x="287.99999999999994" y="-144.5"/>
+<rect fill="burlywood" height="136" stroke="black" width="31.999999999999943" x="320" y="-136"/>
+<rect fill="burlywood" height="119" stroke="black" width="32.00000000000006" x="351.99999999999994" y="-119"/>
+<rect fill="burlywood" height="85" stroke="black" width="32" x="384" y="-85"/>
+<rect fill="burlywood" height="17" stroke="black" width="32" x="416" y="-17"/>
+<rect fill="burlywood" height="34" stroke="black" width="32" x="448" y="-34"/>
 </g>
 <g>
 <g>
@@ -54,27 +54,31 @@ petal_length
 <g>
 <g>
 <line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-0" y2="-0"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-91.89189189189189" y2="-91.89189189189189"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-183.78378378378378" y2="-183.78378378378378"/>
-<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-275.6756756756757" y2="-275.6756756756757"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-85" y2="-85"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-170" y2="-170"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-255" y2="-255"/>
+<line stroke="black" stroke-width="1" x1="0" x2="-10" y1="-340" y2="-340"/>
 </g>
 <line stroke="black" stroke-width="1" x1="0" x2="0" y1="0" y2="-340"/>
 <g>
 <text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-0">
 0
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-91.89189189189189">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-85">
 10
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-183.78378378378378">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-170">
 20
 </text>
-<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-275.6756756756757">
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-255">
 30
+</text>
+<text dominant-baseline="middle" font-size="12" text-anchor="end" x="-15" y="-340">
+40
 </text>
 </g>
 <text font-size="12" text-anchor="middle" transform="rotate(-90 -24 -170)" x="-24" y="-182">
-intensity
+intensity/Distribution
 </text>
 </g>
 </g>

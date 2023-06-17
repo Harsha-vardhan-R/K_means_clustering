@@ -15,6 +15,7 @@ fn k_means_test_wine() {
 
     //let mut machine = k_means("wine-clustering.csv", 3, Some((10.0, 15.0)), 0.01 , vec![]);
     let mut machine = k_means("src/K_Means_Clustering/wine-clustering.csv", 3, None, 0.01 , vec![]);
+    machine.get_distributions("src/");
     //here we provide the names for previously stored just as k - encodings.//still not done.
     //machine.encoding_names();
     //predict.    still accuracy and testing functions are not written.
@@ -36,7 +37,8 @@ fn k_means_test_iris() {
 
     //let mut machine = k_means("IRIS.csv", 3, Some((0.0, 8.0)), 0.001 , vec![0,1,2,3]);
     let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
-    machine.get_distributions();
+    //machine.get_distributions();
+    machine.get_pre_scatters("src/");
     dbg!(&machine.print_populations());
     dbg!(&machine.get_varience());
     dbg!(&machine.get_weights());

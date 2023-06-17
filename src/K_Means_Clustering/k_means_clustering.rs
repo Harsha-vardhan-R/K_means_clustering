@@ -103,6 +103,7 @@ impl k_means_spec<'_> {
 
         for (i , avgs_with_counts) in centroids_with_count.iter().enumerate() {
             //Normally this should not happen if every point is perfectly random in all the features, but that is not the case here , so......
+            //not a problem if we take random sample points as the initial centroids.
             match avgs_with_counts {
                 ( _ , 0) => new_centroids.push(self.centroids[i].clone()),//if the count is zero , we do not modify the centroids.
                 _ => new_centroids.push(avgs_with_counts.0.iter().map(|each| each / (avgs_with_counts.1 as f32)).collect()), //else we will do the average thing
@@ -243,26 +244,38 @@ impl k_means_spec<'_> {
     //we need to consider 1 , 2 , 3  or more than 3 features.
     pub fn plot(&self , path : &str) {
         match self.number_of_features {
-            1 => self.plot_one_dimension(path , 0 , "feature", "number"),
-            2 => self.plot_two_dimension(path),
+            1 => (),//This is kinda sketchy, like what are we even doing? we should also plot the centroid positions.
+            2 => self.plot_two_dimension(path , 0 , 1),//we will take the names from the indexes, do not worry.
             3 => self.plot_three_dimension(path),
             4..=1000 => self.plot_more_than_three_dimen(path),   
             _  => (),//if your df has more than 1000 features or no features at all, fuck you, Ezekiel!.     
         }    
     }
 
-    pub fn plot_distributions(&self) {
-        
+    //NOTE: This method does not work if you only consider some features  
+    
+    pub fn get_distributions(&self , path : &str) {
+        for i in 0..self.number_of_features {
+            let image_name = format!("{}distribution_plot_of_{}.svg" ,path , &self.header_names[i]);
+            self.plot_one_dimension(&image_name, i, &self.header_names[i], "intensity/Distribution");
+        }
+    }
+    //this just to get the scatters of the adjacent features ,before clustering
+    pub fn get_pre_scatters(&self , path : &str) {
+        for i in 0..self.number_of_features - 1 {
+            let image_name = format!("{}pre_scatter_plot_between_{}_and_{}.svg",path ,&self.header_names[i], &self.header_names[i + 1]);
+            self.plot_two_dimension(&image_name , i , i + 1)
+        }
     }
 
     //private functions for plotting of different number of features.
-    pub fn plot_one_dimension(&self , path : &str, pointindex : usize, x_lable : &str, y_label : &str) {
+    pub fn plot_one_dimension(&self , path : &str, feature_index : usize, x_lable : &str, y_label : &str) {
         //first we will get the dataset then we can set the graph scale
         let mut data_to_plot: Vec<(f64 , f64)> = vec![ (0.0 , 0.0) ; self.number_of_samples];
         let mut min = 100000 as f64;
         let mut max = -100 as f64;//temporary////be careful values obviously can go lower than that.
         for (index, sample_point) in self.data.iter().enumerate() {
-            data_to_plot[index] = (sample_point.data[pointindex].clone().try_into().unwrap(), 0.0);
+            data_to_plot[index] = (sample_point.data[feature_index].clone().try_into().unwrap(), 0.0);
             if data_to_plot[index].0 > max {
                 max = data_to_plot[index].0;
             } else if data_to_plot[index].0 < min {
@@ -304,6 +317,8 @@ impl k_means_spec<'_> {
             }
         }
 
+        max_on_y = (max_on_y * 1.1).floor();//this is to give a little amount of the head space in the plot.
+ 
         /* let s1: Plot = Plot::new(data_to_plot).point_style(
             PointStyle::new()
             .marker(PointMarker::Square)
@@ -321,9 +336,47 @@ impl k_means_spec<'_> {
         
     }
 
-    fn plot_two_dimension(&self , path : &str) {
+    pub fn plot_two_dimension(&self , path : &str , feature_index_1 : usize , feature_index_2 : usize ) {
+        let mut data_to_plot: Vec<(f64 , f64)> = vec![ (0.0 , 0.0) ; self.number_of_samples];
+        let mut min_x = f64::INFINITY;
+        let mut max_x = f64::MIN;//temporary////be careful values obviously can go lower than that.
+        let mut min_y = f64::INFINITY;
+        let mut max_y = f64::MIN;
+        for (index, sample_point) in self.data.iter().enumerate() {
+            data_to_plot[index] = (sample_point.data[feature_index_1].clone().try_into().unwrap(), sample_point.data[feature_index_2].clone().try_into().unwrap());
+            if data_to_plot[index].0 > max_x {
+                max_x = data_to_plot[index].0;
+            } else if data_to_plot[index].0 < min_x {
+                min_x = data_to_plot[index].0;
+            }
+            if data_to_plot[index].1 > max_y {
+                max_y = data_to_plot[index].1;
+            } else if data_to_plot[index].1 < min_y {
+                min_y = data_to_plot[index].1;
+            }
+        }
 
-    }
+        dbg!(min_x,max_x,min_y,max_y);
+
+        // We create our scatter plot from the data
+        let s1: Plot = Plot::new(data_to_plot).point_style(
+            PointStyle::new()
+                .marker(PointMarker::Circle) // setting the marker to be a square
+                .colour("#DD3355"),
+        ); 
+
+        // The 'view' describes what set of data is drawn
+        let v = ContinuousView::new()
+            .add(s1)
+            .x_range( min_x , max_x )
+            .y_range( min_y , max_y )
+            .x_label(self.header_names[feature_index_1].clone())
+            .y_label(self.header_names[feature_index_2].clone());
+
+        // A page with a single view is then saved to an SVG file
+        Page::single(&v).save(path).unwrap();
+
+        }
 
     fn plot_three_dimension(&self , path : &str) {
 
@@ -332,15 +385,7 @@ impl k_means_spec<'_> {
     fn plot_more_than_three_dimen(&self , path : &str) {
 
     }
-    //NOTE: This method does not work if you only consider some features  
-
-    pub fn get_distributions(&self) {
-        for i in 0..self.number_of_features {
-            let image_name = format!("distribution_plot_of_{}.svg", &self.header_names[i]);
-            self.plot_one_dimension(&image_name, i, &self.header_names[i], "intensity/Distribution");
-            print!("Done\n");
-        }
-    }
+    
 
 }
 //This is the main logic behind, user will use this.
