@@ -16,7 +16,6 @@ pub struct k_means_spec<'a> {
     number_of_features : usize,
     number_of_samples : usize,
     threshold : f32,
-    pub visuals : bool,
     pub encodings : Option<Vec<String>>,
     varience : Option<Vec<Vec<f32>>>,
     cluster_populations : Option<Vec<usize>>,
@@ -24,6 +23,8 @@ pub struct k_means_spec<'a> {
 
 use core::f32;
 use core::num;
+use std::collections::HashMap;
+use std::collections::hash_map;
 use std::dbg;
 use std::marker;
 use std::string;
@@ -33,6 +34,10 @@ use plotlib::page::Page;
 use plotlib::repr::{Histogram, HistogramBins, Plot};
 use plotlib::style::{BoxStyle, PointMarker, PointStyle};
 use plotlib::view::ContinuousView;
+
+use plotters::prelude::*;
+use plotters::style::RGBColor;
+
 
 impl k_means_spec<'_> {
     
@@ -248,11 +253,9 @@ impl k_means_spec<'_> {
             2 => self.plot_two_dimension(path , 0 , 1),//we will take the names from the indexes, do not worry.
             3 => self.plot_three_dimension(path),
             4..=1000 => self.plot_more_than_three_dimen(path),   
-            _  => (),//if your df has more than 1000 features or no features at all, fuck you, Ezekiel!.     
+            _  => (),//if your df has more than 1000 features or no features at all, fuck you, Ezekiel!, NO, fuck you , Tony!.   
         }    
     }
-
-    //NOTE: This method does not work if you only consider some features  
     
     pub fn get_distributions(&self , path : &str) {
         for i in 0..self.number_of_features {
@@ -265,6 +268,13 @@ impl k_means_spec<'_> {
         for i in 0..self.number_of_features - 1 {
             let image_name = format!("{}pre_scatter_plot_between_{}_and_{}.svg",path ,&self.header_names[i], &self.header_names[i + 1]);
             self.plot_two_dimension(&image_name , i , i + 1)
+        }
+    }
+
+    pub fn get_post_scatters(&self , path : &str) {
+        for i in 0..self.number_of_features - 1 {
+            let image_name = format!("{}post_scatter_plot_between_{}_and_{}.png",path ,&self.header_names[i], &self.header_names[i + 1]);
+            self.post_scatter_plot(&image_name , i , i + 1)
         }
     }
 
@@ -339,7 +349,7 @@ impl k_means_spec<'_> {
     pub fn plot_two_dimension(&self , path : &str , feature_index_1 : usize , feature_index_2 : usize ) {
         let mut data_to_plot: Vec<(f64 , f64)> = vec![ (0.0 , 0.0) ; self.number_of_samples];
         let mut min_x = f64::INFINITY;
-        let mut max_x = f64::MIN;//temporary////be careful values obviously can go lower than that.
+        let mut max_x = f64::MIN;
         let mut min_y = f64::INFINITY;
         let mut max_y = f64::MIN;
         for (index, sample_point) in self.data.iter().enumerate() {
@@ -356,16 +366,14 @@ impl k_means_spec<'_> {
             }
         }
 
-        dbg!(min_x,max_x,min_y,max_y);
-
-        // We create our scatter plot from the data
+        
         let s1: Plot = Plot::new(data_to_plot).point_style(
             PointStyle::new()
                 .marker(PointMarker::Circle) // setting the marker to be a square
                 .colour("#DD3355"),
         ); 
 
-        // The 'view' describes what set of data is drawn
+        
         let v = ContinuousView::new()
             .add(s1)
             .x_range( min_x , max_x )
@@ -373,10 +381,78 @@ impl k_means_spec<'_> {
             .x_label(self.header_names[feature_index_1].clone())
             .y_label(self.header_names[feature_index_2].clone());
 
-        // A page with a single view is then saved to an SVG file
+        // A page with a single view is then saved to an SVG file.
         Page::single(&v).save(path).unwrap();
 
+    }
+    //Here we need to create different vectors and subplot them.
+    //also neeed to plot the centroids wih those same features.
+    pub fn post_scatter_plot(&self , path : &str , feature_index_1 : usize , feature_index_2 : usize ) { 
+
+        let mut map: HashMap<u32 , Vec<(f32, f32)>> = HashMap::default();
+        //filling it with empty clusters and their vectors.
+        for i in 0..self.k {
+            map.insert(i.try_into().unwrap() , Vec::new());
         }
+
+        let mut min_x = f32::INFINITY;
+        let mut max_x = f32::MIN;
+        let mut min_y = f32::INFINITY;
+        let mut max_y = f32::MIN;
+
+        for sample_point in self.data.iter() {
+            map.entry(sample_point.associated_cluster.unwrap())
+                .or_insert(Vec::new()).push((sample_point.data[feature_index_1].clone(), sample_point.data[feature_index_2].clone()));
+
+            if sample_point.data[feature_index_1] > max_x {
+                max_x = sample_point.data[feature_index_1];
+            } else if sample_point.data[feature_index_1] < min_x{
+                min_x = sample_point.data[feature_index_1];
+            }
+
+            if sample_point.data[feature_index_2] > max_y {
+                max_y = sample_point.data[feature_index_2];
+            } else if sample_point.data[feature_index_2] < min_y{
+                min_y = sample_point.data[feature_index_2];
+            }
+
+        } 
+
+        let mut color_array = vec![];
+
+        for _ in 0..self.k {
+            color_array.push(random_color());
+        }
+        //creating a bitmap.
+        let root = BitMapBackend::new( path, (800, 600)).into_drawing_area();
+        root.fill(&WHITE).unwrap();
+
+        let mut chart = ChartBuilder::on(&root)
+            .x_label_area_size(40)
+            .y_label_area_size(40)
+            .build_cartesian_2d(min_x..max_x, min_y..max_y)
+            .unwrap();
+
+        chart
+            .configure_mesh()
+            .x_label_offset(30)
+            .y_label_offset(30)
+            .draw()
+            .unwrap();
+
+        // Plotting scatter points for each cluster one after the other
+        for (cluster, clusters_points) in map {
+            chart
+                .draw_series(clusters_points.iter()
+                .map(|&(x, y)| Circle::new((x, y), 3,  color_array[cluster as usize].filled())))
+                .unwrap();
+        } 
+
+        root.present().unwrap();     
+
+    }
+
+    
 
     fn plot_three_dimension(&self , path : &str) {
 
@@ -387,6 +463,14 @@ impl k_means_spec<'_> {
     }
     
 
+}
+
+fn random_color() -> RGBColor {
+    let red = rand::random::<u8>();
+    let green = rand::random::<u8>();
+    let blue = rand::random::<u8>();
+
+    RGBColor(red, green, blue)
 }
 //This is the main logic behind, user will use this.
 //Lower_limit and upper limit will be used in the random generation function.
@@ -412,9 +496,7 @@ pub fn k_means( csv_file_path: &str,
     //main loop
     loop {
         //saving the points , to calculate the distance afterwards.
-        let previous_centroids = present_dataFrame.centroids.clone();
-        //debugging
-        //dbg!(&present_dataFrame.centroids);
+        let previous_centroids = present_dataFrame.centroids.clone(); 
         
         k_cluster(&mut present_dataFrame);
         //changing the centroids based on the present sample points association, 
@@ -430,9 +512,7 @@ pub fn k_means( csv_file_path: &str,
         } else {
             println!("Max change in position of any centroid = {max_moved}");
         }
-
-        //debugging
-        //present_dataFrame.print_associates();                
+                 
         print!("\n");
 
         //if we have reached the end of the iteration, print the iteration number.
@@ -446,7 +526,7 @@ pub fn k_means( csv_file_path: &str,
 }
 
 //This function will take the entire list of centroids and also the entire dataset.
-//i.e sets the associative field to the nearest centroid.
+//i.e sets the associative field to the nearest centroid for each sample point.
 fn k_cluster(total_df : &mut k_means_spec ) -> () {
 
     let mut to_be_filled = vec![ 0 ; total_df.k ];
@@ -477,7 +557,7 @@ fn k_cluster(total_df : &mut k_means_spec ) -> () {
 
 
 //This only generates random numbers , but do not worry about different ranges in different features, even if it contains one sample point,
-//while calculating the average they will set , keep your fingers crossed for it atleast catches one sample point.maybe will update in next version.
+//while calculating the average they will set , keep your fingers crossed for it to atleast catches one sample point.maybe will update in next version.
 fn generate_k_centroids(number_of_clusters : usize ,
                         number_of_features : usize ,
                         lower_limit : f32 , 
@@ -541,7 +621,7 @@ use crate::n_dimen::max_distance_between_sets;
 
 fn csv_to_df(
     file_path: &str,
-    which_features: Vec<usize> ) -> Result<Vec<sample_point>, Box<dyn Error>> {
+    which_features: &Vec<usize> ) -> Result<Vec<sample_point>, Box<dyn Error>> {
 
     let file_system = File::open(file_path)?;
     let reader = BufReader::new(file_system);
@@ -580,16 +660,28 @@ fn csv_to_df(
 
     Ok(full_dataset)
 }
-///warning this does not implement only selected features implementation, please! this is not even experimental.
-fn get_headers(path : &str) -> Vec<String> {
+///also only considers the selected features.
+fn get_headers(path : &str , which_features: &Vec<usize> , number_of_features : usize) -> Vec<String> {
     let file_system = File::open(path).unwrap();
     let mut out_vector : Vec<String> = vec![];
     let reader = BufReader::new(file_system);
+    let mut match_vector : Vec<usize> = vec![];
+    if which_features.is_empty() {//This is to consider only wanted features, if the which features vector is empty that means we want to consider all the features.
+        for j in 0..number_of_features {
+            match_vector.push(j);
+        }
+    } else {
+        for j in which_features.iter() {
+            match_vector.push(*j);
+        }
+    }
     let mut csv_header = ReaderBuilder::new().has_headers(false).from_reader(reader);
     for header in csv_header.records() {
         let head = header.unwrap();
-        for i in head.iter() {
-            out_vector.push(i.to_owned());
+        for (i , string) in head.iter().enumerate() {
+            if match_vector.contains(&i) {
+                out_vector.push(string.to_owned());
+            }
         }
         break;
     }
@@ -600,7 +692,7 @@ fn get_headers(path : &str) -> Vec<String> {
 //creating a struct, which stores all the info about the present k_mean.
 //private function.
 fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32, f32)> , which_features: Vec<usize>) -> k_means_spec { 
-    let data = csv_to_df(csv_file_path , which_features).unwrap();
+    let data = csv_to_df(csv_file_path , &which_features).unwrap();
     //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
     let number_of_features = data[0].data.len();
     let number_of_samples = data.len();
@@ -611,13 +703,12 @@ fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32
                         Some((lower_limit , upper_limit)) => generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
                         None => get_random_samples_from_df(&data, K, number_of_features, number_of_samples),
                     },
-                    header_names : get_headers(csv_file_path),
+                    header_names : get_headers(csv_file_path , &which_features , number_of_features),
                     data: data,                       
                     k: K,
                     number_of_features: number_of_features,
                     number_of_samples: number_of_samples,
-                    threshold : threshold,
-                    visuals: true,
+                    threshold : threshold, 
                     encodings : None,
                     varience: None,
                     cluster_populations : None,
