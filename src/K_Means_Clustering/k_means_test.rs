@@ -14,8 +14,10 @@ fn k_means_test_wine() {
     let start_time = time::Instant::now();
 
     //let mut machine = k_means("wine-clustering.csv", 3, Some((10.0, 15.0)), 0.01 , vec![]);
-    let mut machine = k_means("src/K_Means_Clustering/wine-clustering.csv", 3, None, 0.01 , vec![]);
-    machine.get_distributions("src/");
+    let mut machine = k_means("src/K_Means_Clustering/wine-clustering.csv", 3, None, 0.01 , vec![] , true);
+    //machine.get_distributions("src/");
+    //machine.get_post_scatters("src/");
+    machine.post_scatter_plot("src/new.png", 4, 12);
     //here we provide the names for previously stored just as k - encodings.//still not done.
     //machine.encoding_names();
     //predict.    still accuracy and testing functions are not written.
@@ -25,7 +27,7 @@ fn k_means_test_wine() {
     dbg!(&machine.get_varience());    
     dbg!(&machine.get_weights());
     dbg!(&machine.centroids);
-    dbg!(&machine.print_populations());
+    //dbg!(&machine.print_populations() , &machine.header_names);
     print!("Time Taken: ");
     print!("{:?}\n", time::Instant::now() - start_time);
 }//getting [69,62,47], 
@@ -36,17 +38,17 @@ fn k_means_test_iris() {
     let start_time = time::Instant::now();
 
     //let mut machine = k_means("IRIS.csv", 3, Some((0.0, 8.0)), 0.001 , vec![0,1,2,3]);
-    let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
+    let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.001 , vec![0,1,2,3] , true);
     //dbg!(&machine.header_names);
     //machine.get_distributions();
     //machine.get_pre_scatters("src/");
     machine.get_post_scatters("src/");
-    dbg!(&machine.print_populations());
+    
     dbg!(&machine.get_varience());
     dbg!(&machine.get_weights());
     dbg!(&machine.centroids);
-    machine.plot_one_dimension("src/K_Means_Clustering/hahaha.png" , 0, "   ", "   ");
-
+    //machine.plot_one_dimension("src/K_Means_Clustering/hahaha.png" , 0, "   ", "   ");
+    dbg!(&machine.print_populations());
     print!("Time Taken: ");
     print!("{:?}\n", time::Instant::now() - start_time);
     

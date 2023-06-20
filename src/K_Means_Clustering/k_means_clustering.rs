@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, unused_mut, unused_imports)]
 
-#[derive(Debug)]
+#[derive(Debug , Clone)]
 pub struct sample_point {
     pub data : Vec<f32>,
     pub associated_cluster : Option<u32>,
@@ -16,24 +16,19 @@ pub struct k_means_spec<'a> {
     number_of_features : usize,
     number_of_samples : usize,
     threshold : f32,
+    pub max_vector : Vec<f32>,
+    pub min_vector : Vec<f32>,
     pub encodings : Option<Vec<String>>,
     varience : Option<Vec<Vec<f32>>>,
     cluster_populations : Option<Vec<usize>>,
+    normalised : bool,
 }
 
-use core::f32;
-use core::num;
-use std::collections::HashMap;
-use std::collections::hash_map;
-use std::dbg;
-use std::marker;
-use std::string;
+use core::{f32, num};
+use std::{cmp::min, collections::{HashMap, hash_map}, dbg, marker, string, arch::x86_64::_CMP_FALSE_OQ};
 use fastrand::Rng;
 //use plotters::prelude::*;
-use plotlib::page::Page;
-use plotlib::repr::{Histogram, HistogramBins, Plot};
-use plotlib::style::{BoxStyle, PointMarker, PointStyle};
-use plotlib::view::ContinuousView;
+use plotlib::{page::Page, repr::{Histogram, HistogramBins, Plot}, style::{BoxStyle, PointMarker, PointStyle}, view::ContinuousView};
 
 use plotters::prelude::*;
 use plotters::style::RGBColor;
@@ -226,6 +221,17 @@ impl k_means_spec<'_> {
     /// 
     /// prints the cluster name associated with the nearest centroid.
     pub fn predict(&self, x: &Vec<f32>) -> u32 {
+        let mut this = vec![];
+        //we normalise this point if we initially normalised the data set.
+        match self.normalised {
+            true => for i in 0..self.number_of_features {
+                this.push((x[i] - self.min_vector[i]/self.max_vector[i] - self.min_vector[i]));
+            },
+            false => for ty in x {
+                this.push(*ty);
+            }
+        }
+        
         let mut present_min_dist_with = f32::INFINITY;
         let mut closest_centroid_index = 0;
         
@@ -436,7 +442,9 @@ impl k_means_spec<'_> {
         chart
             .configure_mesh()
             .x_label_offset(30)
-            .y_label_offset(30)
+            .y_label_offset(50)
+            .x_desc(&self.header_names[feature_index_1])
+            .y_desc(&self.header_names[feature_index_2])
             .draw()
             .unwrap();
 
@@ -447,6 +455,11 @@ impl k_means_spec<'_> {
                 .map(|&(x, y)| Circle::new((x, y), 3,  color_array[cluster as usize].filled())))
                 .unwrap();
         } 
+        //now we need to plot cluster centers
+        for cluster in 0..self.k {
+            chart.draw_series(self.centroids.iter() 
+                .map(|vector| TriangleMarker::new((vector[feature_index_1] , vector[feature_index_2]) , 4 , BLACK.filled()))).unwrap();
+        }
 
         root.present().unwrap();     
 
@@ -476,8 +489,8 @@ fn random_color() -> RGBColor {
 //Lower_limit and upper limit will be used in the random generation function.
 ///'''
 ///                                                           / This is a feature you, can select which features you want to consider while training, if it is empty all the features will be considered.
-///address of the csv data file-^                            ^      
-///let mut machine = k_means("IRIS.csv", 3, None, 0.001 , vec![0,1,2,3]);
+///address of the csv data file-^                            ^              />this is for normalisation , giving the argument true will normalise the data frame before clustering. 
+///let mut machine = k_means("IRIS.csv", 3, None, 0.001 , vec![0,1,2,3] , true);
 ///                                      ^    ^     ^this is the threshold value , that is the limiting value of maximum movement by any centroid while breaking out.
 ///                                      |    \----this part can be a none or a some((f32, f32))
 ///                                      \-----the number of clusters you want to form.
@@ -487,10 +500,11 @@ pub fn k_means( csv_file_path: &str,
                 k_value: usize,
                 limits: Option<(f32, f32)>,
                 Threshold: f32,
-                which_features: Vec<usize>) -> k_means_spec {
+                which_features: Vec<usize>,
+                normalize : bool ) -> k_means_spec {
 
     //mut, because we will change the centroid values, after every iteration.
-    let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, limits, which_features);//now we have a data_set and its specifications to work on.
+    let mut present_dataFrame = new_df(csv_file_path, k_value, Threshold, limits, which_features , normalize);//now we have a data_set and its specifications to work on.
     let mut count = 1;
     //clustering in k means until we get the centroid points moving less than threshold value after one iteration.
     //main loop
@@ -610,57 +624,77 @@ fn get_random_samples_from_df(data : &Vec<sample_point>, k: usize , number_of_fe
     centroid
 }
 
-use std::error::Error;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
+use std::{error::Error, fs::File, io::{prelude::*, BufReader}};
 use csv::ReaderBuilder;
 
-use crate::n_dimen::distance_between;
-use crate::n_dimen::max_distance_between_sets;
+use crate::n_dimen::{distance_between, max_distance_between_sets};
 
-fn csv_to_df(
-    file_path: &str,
-    which_features: &Vec<usize> ) -> Result<Vec<sample_point>, Box<dyn Error>> {
+fn csv_to_df(file_path: &str, which_features: &Vec<usize>) -> Result<(Vec<sample_point> , Vec<f32> , Vec<f32>), Box<dyn Error>> {
+    
+    let mut number_of_samples = 0;
+    let mut number_of_full_features = 0;
+    
+    let file_system = File::open(file_path)?;
+    let reader = BufReader::new(file_system);
+    let mut csv_reader = ReaderBuilder::new().has_headers(true).from_reader(reader);    
+
+    for records in csv_reader.records() {
+        let result = records?;
+        number_of_samples += 1;
+        number_of_full_features = result.len();
+    }
+
+    //dbg!(number_of_full_features , number_of_samples);
+    //creating the match vector to consider only the wanted features. 
+    let mut match_vector : Vec<usize> = vec![];
+    if which_features.is_empty() {//This is to consider only wanted features, if the which features vector is empty that means we want to consider all the features.
+        for j in 0..number_of_full_features {
+            match_vector.push(j);
+        }
+    } else {
+        for j in which_features.iter() {
+            match_vector.push(*j);
+        }
+    }
+    //dbg!(&match_vector);
+    //creating the vectors beforehand cause we need not reallocate every time , maybe saving us time
+    //be careful number_of_full_features represents all the features , even which you do not want (if you've mentioned),
+    //so we use match_vector.len()
+    let mut max_vector = vec![ f32::MIN ; match_vector.len() ];
+    let mut min_vector = vec![ f32::MAX ; match_vector.len() ];
+    let mut full_dataset = vec![sample_point{
+                                                        data : vec![ 0.0_f32 ; match_vector.len() ],
+                                                        associated_cluster : None } ; number_of_samples];
 
     let file_system = File::open(file_path)?;
     let reader = BufReader::new(file_system);
-    let mut csv_reader = ReaderBuilder::new().has_headers(true).from_reader(reader);
+    let mut csv_reader = ReaderBuilder::new().has_headers(true).from_reader(reader); 
 
-    let full_dataset: Vec<sample_point> = csv_reader
-        .records()
-        .filter_map(|record| {
-            let mut this_point = sample_point {
-                data: vec![],
-                associated_cluster: None,
-            };
-            let record = record.ok()?;
-            if which_features.is_empty() {
-                // If which_features is empty, consider all the columns
-                this_point.data = record
-                    .iter()
-                    .map(|s| s.parse::<f32>())
-                    .collect::<Result<Vec<f32>, _>>()
-                    .ok()?;
-            } else {
-                //This is really safe, 'cause if the object cannot be parsed , then it will be not considered an error because of the .ok() , which returns None if there is an error.
-                // Consider only the columns specified by which_features/also problematic, if the data has some null or NaN's , we are fucked!
-                this_point.data = which_features
-                    .iter()
-                    .map(|&i| record.get(i))
-                    .collect::<Option<Vec<&str>>>()?
-                    .iter()
-                    .map(|&s| s.parse::<f32>())
-                    .collect::<Result<Vec<f32>, _>>()
-                    .ok()?;
+    //here in these two loops we set the values for the three above mentioned vectors.
+    for (j , records) in csv_reader.records().enumerate() {
+        let this = records?;
+        for (i, &field_index) in match_vector.iter().enumerate() {
+            let value = this.get(field_index).ok_or("The indexing value is out of the bounds, fuck off!")?;
+            let parsed_value: f32 = value.parse()?;
+            //dbg!(&parsed_value);
+            full_dataset[j].data[i] = parsed_value;                 
+            //checking and changin the maximum and the minimum values.
+            if parsed_value > max_vector[field_index] {
+                max_vector[field_index] = parsed_value;
+            } else if parsed_value < min_vector[field_index] {
+                min_vector[field_index] = parsed_value;
             }
-            Some(this_point)
-        })
-        .collect::<Vec<_>>();
+            
+        }
+        
+    }
 
-    Ok(full_dataset)
+    //dbg!(&max_vector , &min_vector);
+
+    Ok((full_dataset , max_vector , min_vector))
+
 }
-///also only considers the selected features.
+//also only considers the selected features.
 fn get_headers(path : &str , which_features: &Vec<usize> , number_of_features : usize) -> Vec<String> {
     let file_system = File::open(path).unwrap();
     let mut out_vector : Vec<String> = vec![];
@@ -687,30 +721,52 @@ fn get_headers(path : &str , which_features: &Vec<usize> , number_of_features : 
     }
 
     out_vector
+
+}
+
+fn normalize_samples(mut sample : Vec<sample_point> , max_vector : &Vec<f32> , min_vector : &Vec<f32> , number_of_features : usize , number_of_samples : usize) -> Vec<sample_point> {// this is important to normalise the even the input in the predict , because it is still in the 
+    //somehow manage to get the max and min values for each of the features from the csv to df cause we are alredy iterating over all the points we need not again iterate and find the max and the min for each feature.
+    for sample_index in 0..number_of_samples {
+        for feature_index in 0..number_of_features {
+            sample[sample_index].data[feature_index] = (sample[sample_index].data[feature_index] - min_vector[feature_index]) / (max_vector[feature_index] - min_vector[feature_index]);
+        }
+    }
+
+    sample
+
 }
 
 //creating a struct, which stores all the info about the present k_mean.
 //private function.
-fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32, f32)> , which_features: Vec<usize>) -> k_means_spec { 
-    let data = csv_to_df(csv_file_path , &which_features).unwrap();
+fn new_df(csv_file_path : & str ,K : usize, threshold : f32 ,limits: Option<(f32, f32)> , which_features: Vec<usize> , normalize : bool) -> k_means_spec { 
+    let mut data = csv_to_df(csv_file_path , &which_features).unwrap();
     //we are calculating the number of features after making the data frame, so we need not change the size while generating the centroids.
-    let number_of_features = data[0].data.len();
-    let number_of_samples = data.len();
+    let number_of_features = data.0[0].data.len();
+    let number_of_samples = data.0.len();
+
+    match normalize {
+        true => data.0 = normalize_samples(data.0 , &data.1 , &data.2 , number_of_features , number_of_samples), 
+        false => (),
+    }
+    
     //creating and returning a new k_means_spec struct.
     k_means_spec {  csv_file_path: csv_file_path,
                     centroids : match limits {
                         //we will match the limits, if the user gives none, then we will take some random points as initial centroids.
                         Some((lower_limit , upper_limit)) => generate_k_centroids(K, number_of_features, lower_limit, upper_limit),
-                        None => get_random_samples_from_df(&data, K, number_of_features, number_of_samples),
+                        None => get_random_samples_from_df(&data.0, K, number_of_features, number_of_samples),
                     },
                     header_names : get_headers(csv_file_path , &which_features , number_of_features),
-                    data: data,                       
+                    data: data.0,                                              
                     k: K,
                     number_of_features: number_of_features,
                     number_of_samples: number_of_samples,
-                    threshold : threshold, 
+                    threshold : threshold,
+                    max_vector : data.1,
+                    min_vector : data.2, 
                     encodings : None,
                     varience: None,
                     cluster_populations : None,
+                    normalised : normalize,
     }
 }
