@@ -38,10 +38,11 @@ fn k_means_test_iris() {
     let start_time = time::Instant::now();
 
     //let mut machine = k_means("IRIS.csv", 3, Some((0.0, 8.0)), 0.001 , vec![0,1,2,3]);
-    let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.001 , vec![0,1,2,3] , true);
+    let mut machine = k_means("src/K_Means_Clustering/IRIS.csv", 3, None, 0.00001 , vec![0,1,2,3] , true);
     //dbg!(&machine.header_names);
     //machine.get_distributions();
-    //machine.get_pre_scatters("src/");
+    machine.get_pre_scatters("src/");
+    //machine.plot_two_dimension("src/new_oneeeee.png", 1, 2);
     machine.get_post_scatters("src/");
     
     dbg!(&machine.get_varience());

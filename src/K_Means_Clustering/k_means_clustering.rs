@@ -32,7 +32,7 @@ use plotlib::{page::Page, repr::{Histogram, HistogramBins, Plot}, style::{BoxSty
 
 use plotters::prelude::*;
 use plotters::style::RGBColor;
-
+use plotters::prelude::Histogram as OtherHistogram;
 
 impl k_means_spec<'_> {
     
@@ -46,7 +46,7 @@ impl k_means_spec<'_> {
     /// let foo = df.print_populations();
     /// '''
     /// 
-    /// foo will be of the type vec<usize> and of length df.k.    
+    /// foo will be of the type vec<usize> and of length df.k.   
     pub fn print_populations(&self) -> Vec<usize> {
         self.cluster_populations.clone().unwrap()
     }    
@@ -64,7 +64,7 @@ impl k_means_spec<'_> {
     /// '''
     pub fn encoding_names(&mut self , Names : Vec<String>) {
         //checking for the correct number of names 
-        assert!(Names.len() == self.k , "The number of names provided do not match the k value");
+        assert!(Names.len() == self.k , "The number of names provided do not match the given k value");
 
         self.encodings = Some(Names);
 
@@ -225,7 +225,7 @@ impl k_means_spec<'_> {
         //we normalise this point if we initially normalised the data set.
         match self.normalised {
             true => for i in 0..self.number_of_features {
-                this.push((x[i] - self.min_vector[i]/self.max_vector[i] - self.min_vector[i]));
+                this.push(x[i] - self.min_vector[i]/self.max_vector[i] - self.min_vector[i]);
             },
             false => for ty in x {
                 this.push(*ty);
@@ -253,15 +253,15 @@ impl k_means_spec<'_> {
     }
     //here we write the plotting stuff.
     //we need to consider 1 , 2 , 3  or more than 3 features.
-    pub fn plot(&self , path : &str) {
+    /* pub fn plot(&self , path : &str) {
         match self.number_of_features {
             1 => (),//This is kinda sketchy, like what are we even doing? we should also plot the centroid positions.
-            2 => self.plot_two_dimension(path , 0 , 1),//we will take the names from the indexes, do not worry.
+            2 => //self.plot_two_dimension(path , 0 , 1),//we will take the names from the indexes, do not worry.
             3 => self.plot_three_dimension(path),
             4..=1000 => self.plot_more_than_three_dimen(path),   
             _  => (),//if your df has more than 1000 features or no features at all, fuck you, Ezekiel!, NO, fuck you , Tony!.   
         }    
-    }
+    } */
     
     pub fn get_distributions(&self , path : &str) {
         for i in 0..self.number_of_features {
@@ -270,11 +270,12 @@ impl k_means_spec<'_> {
         }
     }
     //this just to get the scatters of the adjacent features ,before clustering
-    pub fn get_pre_scatters(&self , path : &str) {
+    pub fn get_pre_scatters(&self , path : &str) -> Result<(), Box<dyn std::error::Error>> {
         for i in 0..self.number_of_features - 1 {
-            let image_name = format!("{}pre_scatter_plot_between_{}_and_{}.svg",path ,&self.header_names[i], &self.header_names[i + 1]);
-            self.plot_two_dimension(&image_name , i , i + 1)
+            let image_name = format!("{}pre_scatter_plot_between_{}_and_{}.png",path ,&self.header_names[i], &self.header_names[i + 1]);
+            self.plot_two_dimension(&image_name , i , i + 1)?;
         }
+        Ok(())
     }
 
     pub fn get_post_scatters(&self , path : &str) {
@@ -339,7 +340,7 @@ impl k_means_spec<'_> {
             PointStyle::new()
             .marker(PointMarker::Square)
             .colour("FFFFFF"),
-        ); *///this looks like shit .
+        ); *///this looks like shit.
 
         let v = ContinuousView::new()
             .add(h)
@@ -352,13 +353,13 @@ impl k_means_spec<'_> {
         
     }
 
-    pub fn plot_two_dimension(&self , path : &str , feature_index_1 : usize , feature_index_2 : usize ) {
+    pub fn plot_two_dimension(&self , path : &str , feature_index_1 : usize , feature_index_2 : usize ) -> Result<(), Box<dyn std::error::Error>> {
         let mut data_to_plot: Vec<(f64 , f64)> = vec![ (0.0 , 0.0) ; self.number_of_samples];
         let mut min_x = f64::INFINITY;
         let mut max_x = f64::MIN;
         let mut min_y = f64::INFINITY;
         let mut max_y = f64::MIN;
-        for (index, sample_point) in self.data.iter().enumerate() {
+        for (index, sample_point) in self.data.iter().enumerate(){
             data_to_plot[index] = (sample_point.data[feature_index_1].clone().try_into().unwrap(), sample_point.data[feature_index_2].clone().try_into().unwrap());
             if data_to_plot[index].0 > max_x {
                 max_x = data_to_plot[index].0;
@@ -372,24 +373,32 @@ impl k_means_spec<'_> {
             }
         }
 
+        let color = random_color();
         
-        let s1: Plot = Plot::new(data_to_plot).point_style(
-            PointStyle::new()
-                .marker(PointMarker::Circle) // setting the marker to be a square
-                .colour("#DD3355"),
-        ); 
+        let root = BitMapBackend::new(path , (1024 , 768)).into_drawing_area();
+        root.fill(&WHITE)?;
 
+        let mut scatter_ctx = ChartBuilder::on(&root)
+            .x_label_area_size(40)
+            .y_label_area_size(40)
+            .build_cartesian_2d(min_x..max_x, min_y..max_y)?;
+
+        scatter_ctx
+            .configure_mesh()
+            .x_desc(self.header_names[feature_index_1].to_owned())
+            .y_desc(self.header_names[feature_index_2].to_owned())
+            .draw()?;
         
-        let v = ContinuousView::new()
-            .add(s1)
-            .x_range( min_x , max_x )
-            .y_range( min_y , max_y )
-            .x_label(self.header_names[feature_index_1].clone())
-            .y_label(self.header_names[feature_index_2].clone());
+        scatter_ctx.draw_series(
+            data_to_plot
+                .iter()
+                .map(|&(x , y)| Circle::new((x , y) , 3 ,color.filled()))   
+        )?;
 
-        // A page with a single view is then saved to an SVG file.
-        Page::single(&v).save(path).unwrap();
-
+        root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
+    
+        Ok(())
+    
     }
     //Here we need to create different vectors and subplot them.
     //also neeed to plot the centroids wih those same features.
@@ -456,7 +465,7 @@ impl k_means_spec<'_> {
                 .unwrap();
         } 
         //now we need to plot cluster centers
-        for cluster in 0..self.k {
+        for _cluster in 0..self.k {
             chart.draw_series(self.centroids.iter() 
                 .map(|vector| TriangleMarker::new((vector[feature_index_1] , vector[feature_index_2]) , 4 , BLACK.filled()))).unwrap();
         }
@@ -467,13 +476,13 @@ impl k_means_spec<'_> {
 
     
 
-    fn plot_three_dimension(&self , path : &str) {
+    /* fn plot_three_dimension(&self , path : &str) {
 
-    }
+    } */
 
-    fn plot_more_than_three_dimen(&self , path : &str) {
+    /* fn plot_more_than_three_dimen(&self , path : &str) {
 
-    }
+    } */
     
 
 }
